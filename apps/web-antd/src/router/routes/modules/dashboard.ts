@@ -11,6 +11,15 @@ const routes: RouteRecordRaw[] = [
     },
   },
   {
+    name: 'Equ ',
+    path: '/equ',
+    component: () => import('#/views/dashboard/equ/index.vue'),
+    meta: {
+      // icon: 'lucide:area-chart',
+      title: '设备管理',
+    },
+  },
+  {
     name: 'MessageDetail',
     path: '/messageDetail',
     component: () =>

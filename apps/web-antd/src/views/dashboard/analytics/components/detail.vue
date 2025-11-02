@@ -1,82 +1,167 @@
 <template>
-  <div class="MessageDetail">
-    <div>
-      <APageHeader title="设备1 18213413413" @back="handleBack" />
-    </div>
-    <div class="message-content">
+  <section class="MessageDetail">
+    <APageHeader
+      style="border: 1px solid rgb(235 237 240)"
+      :title="`${query.deviceCode} ${query.phone}`"
+      @back="handleBack"
+    />
+    <div class="message-content" ref="scrollContainer">
       <div v-for="item in messageList" :key="item.id">
-        <div class="flex justify-end">
+        <div class="flex justify-end" v-if="item.type === 0">
           <div class="flex flex-col items-end">
             <div class="mesage-detail">
-              {{ item.equName }} &nbsp; &nbsp;{{ item.time }}
+              {{ item.simSlot === 0 ? 'SIM1' : 'SIM2' }} &nbsp;{{
+                dayjs(item.smsTime).format('YYYY-MM-DD HH:mm:ss')
+              }}
             </div>
-            <div class="message-li bg-[#95ec69]">
-              {{ item.user }}
+            <div class="flex items-center">
+              <SvgLoadingIcon
+                class="mr-[10px] size-5"
+                v-if="item.status === 'sending'"
+              />
+              <img
+                v-if="item.status === 'failed'"
+                class="mr-[10px] h-[20px] w-[20px]"
+                src="/static/fail.png"
+                alt=""
+              />
+              <div class="message-li bg-[#95ec69]">
+                {{ item.content }}
+              </div>
             </div>
           </div>
         </div>
-        <div class="mt-[20px]">
+        <div class="mt-[20px]" v-else>
           <div class="mesage-detail">
-            {{ item.equName }} &nbsp; &nbsp;{{ item.phone }} &nbsp; &nbsp;{{
-              item.time
+            {{ item.simSlot === 0 ? 'SIM1' : 'SIM2' }} &nbsp;{{
+              dayjs(item.smsTime).format('YYYY-MM-DD HH:mm:ss')
             }}
           </div>
-          <div class="message-li bg-[#ededed]">
-            {{ item.aggent }}
+          <div class="flex items-center">
+            <div class="message-li bg-[#ededed]">
+              {{ item.content }}
+            </div>
+            <SvgLoadingIcon
+              class="ml-[10px] size-5"
+              v-if="item.status === 'sending'"
+            />
+            <img
+              v-if="item.status === 'failed'"
+              class="ml-[10px] h-[20px] w-[20px]"
+              src="/static/fail.png"
+              alt=""
+            />
           </div>
         </div>
       </div>
     </div>
     <div class="message-send">
-      <ATextarea ref="messageRef" v-model:value="message" />
+      <ATextarea
+        ref="messageRef"
+        @keyup.enter="sendMessage"
+        v-model:value="message"
+      />
       <div class="send-button">
-        <AButton type="primary">发送</AButton>
+        <AButton type="primary" @click="sendMessage">发送</AButton>
       </div>
     </div>
-  </div>
+  </section>
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref } from 'vue';
+import { nextTick, onMounted, ref } from 'vue';
+import { useRoute } from 'vue-router';
+
+import { SvgLoadingIcon } from '@vben/icons';
 
 import {
   Button as AButton,
+  message as AMessage,
   PageHeader as APageHeader,
   Textarea as ATextarea,
 } from 'ant-design-vue';
+import dayjs from 'dayjs';
 
+import { getMessageRecordApi, sendMessageApi } from '#/api/core/sms';
+
+const { query } = useRoute();
+const scrollContainer = ref();
 const message = ref('');
 const messageRef = ref();
-const messageList = ref([
-  {
-    id: 1,
-    user: '你好',
-    aggent: '您好，请问有什么可以帮助您的？',
-    time: '2024-01-01 12:00:00',
-    equName: 'sim1',
-    phone: '13800138000',
-  },
-]);
+const messageList = ref([]);
 function handleBack() {
   window.history.back();
+}
+// 滚动到底部的函数
+const scrollToBottom = () => {
+  // 确保容器存在
+  if (scrollContainer.value) {
+    // 核心代码：将滚动位置设置为容器可滚动的总高度[citation:1][citation:2]
+    scrollContainer.value.scrollTop = scrollContainer.value.scrollHeight;
+  }
+};
+async function getMessageRecord() {
+  const res = await getMessageRecordApi({
+    phone: query.phone,
+    deviceCode: query.deviceCode,
+  });
+  messageList.value = res;
+}
+async function sendMessage() {
+  const smsSlot = messageList.value[0].simSlot;
+  console.log(smsSlot);
+
+  messageList.value.push({
+    id: Date.now(),
+    type: 0,
+    status: 'sending',
+    content: message.value,
+    simSlot: 0,
+    smsTime: Date.now(),
+  });
+  const res = await sendMessageApi({
+    phone: query.phone,
+    deviceCode: query.deviceCode,
+    content: message.value,
+    smsSlot,
+  });
+  message.value = '';
+
+  if (res === 1) {
+    messageList.value[messageList.value.length - 1].status = 'success';
+  } else {
+    AMessage.error(res);
+  }
+
+  // getMessageRecord();
 }
 onMounted(() => {
   if (messageRef.value) {
     messageRef.value.focus();
   }
+  nextTick(() => {
+    scrollToBottom();
+  });
+  getMessageRecord();
 });
 </script>
 <style lang="less" scoped>
 .MessageDetail {
-  height: calc(100% - 100px);
-  margin: 50px 200px;
+  height: 100%;
+  // margin: 50px 200px;
   background: #fff;
-  border-radius: 20px;
+  // border-radius: 20px;
   display: flex;
   flex-direction: column;
+  .header {
+    height: 50px;
+    border-bottom: 1px solid #d5d5d5;
+  }
   .message-content {
     padding: 30px;
-    flex: 1;
+    height: calc(100% - 290px);
+    // flex: 1;
+    overflow-y: auto;
     .mesage-detail {
       color: #a9a9ae;
     }
@@ -95,7 +180,7 @@ onMounted(() => {
     .send-button {
       position: absolute;
       right: 20px;
-      bottom: 20px;
+      bottom: 10px;
     }
     :deep .ant-input {
       height: 100%;

@@ -6,9 +6,11 @@
           <ListItemMeta :description="item.description">
             <template #title>
               <div class="flex">
-                <a class="mr-[10px]" @click="handleDetail">{{ item.title }}</a>
-                <Tag v-if="item.type === 0" color="orange">收</Tag>
-                <Tag v-else color="green">发</Tag>
+                <a class="mr-[10px]" @click="handleDetail(item)">{{
+                  item.title
+                }}</a>
+                <!-- <Tag v-if="item.type === 1" color="orange">收</Tag>
+                <Tag v-else color="green">发</Tag> -->
               </div>
             </template>
           </ListItemMeta>
@@ -23,32 +25,53 @@
   </div>
 </template>
 <script lang="ts" setup>
+import { ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
-import { List, ListItem, ListItemMeta, Tag } from 'ant-design-vue';
+import { List, ListItem, ListItemMeta } from 'ant-design-vue';
 
+import { getMessageGroupListApi } from '#/api/core/sms';
+
+const props = defineProps({
+  deviceCode: {
+    type: Array,
+    default: [],
+  },
+});
 const { push } = useRouter();
 interface DataItem {
   title: string;
   description: string;
   time: string;
 }
-const data: DataItem[] = [
-  {
-    title: '192354515506',
-    description:
-      '您的快递已到达，请前往取件。快递公司：顺丰速运，取件码：123456',
-    time: '2024-01-01 12:00:00',
-    type: 1,
-  },
-  {
-    title: '18341344214',
-    description: '您的验证码是789012，有效期10分钟，请勿泄露给他人。',
-    time: '2024-01-01 12:00:00',
-    type: 0,
-  },
-];
-function handleDetail() {
-  push('/messageDetail');
+const data = ref<DataItem[]>([]);
+function handleDetail(row) {
+  push(`/messageDetail?phone=${row.title}&deviceCode=${row.deviceCode}`);
 }
+async function getList(deviceCode) {
+  const res = await getMessageGroupListApi({
+    deviceCode:
+      deviceCode.length > 0 && deviceCode[0] ? deviceCode.join(',') : undefined,
+  });
+  data.value =
+    Array.isArray(res) && res.length > 0
+      ? res.map((i) => {
+          return {
+            title: i.phone,
+            description: i.lastMessage,
+            time: i.lastTime,
+            type: i.lastType,
+            deviceCode: i.deviceCode,
+          };
+        })
+      : [];
+}
+
+watch(
+  () => props.deviceCode,
+  (newVal) => {
+    getList(newVal);
+  },
+  { immediate: true, deep: true },
+);
 </script>
