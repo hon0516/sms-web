@@ -5,7 +5,7 @@
         <ListItem>
           <ListItemMeta :description="item.description">
             <template #title>
-              <a>{{ item.title }}</a>
+              <a @click="handleDetail">{{ item.title }}</a>
             </template>
           </ListItemMeta>
           <template #extra>
@@ -19,8 +19,11 @@
   </div>
 </template>
 <script lang="ts" setup>
+import { useRouter } from 'vue-router';
+
 import { List, ListItem, ListItemMeta } from 'ant-design-vue';
 
+const { push } = useRouter();
 interface DataItem {
   title: string;
   description: string;
@@ -49,4 +52,7 @@ const data: DataItem[] = [
     time: '2024-01-01 12:00:00',
   },
 ];
+function handleDetail() {
+  push('/messageDetail');
+}
 </script>

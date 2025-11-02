@@ -8,3 +8,7 @@ import { requestClient } from '#/api/request';
 export async function getUserInfoApi() {
   return requestClient.get<UserInfo>('/user/info');
 }
+// 设备列表
+export async function getDeviceListApi() {
+  return requestClient.get('/device/list');
+}

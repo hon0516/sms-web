@@ -19,15 +19,15 @@ describe('useAccessStore', () => {
 
   it('updates accessToken state correctly', () => {
     const store = useAccessStore();
-    expect(store.accessToken).toBeNull(); // 初始状态
+    expect(store.token).toBeNull(); // 初始状态
     store.setAccessToken('abc123');
-    expect(store.accessToken).toBe('abc123');
+    expect(store.token).toBe('abc123');
   });
 
   it('returns the correct accessToken', () => {
     const store = useAccessStore();
     store.setAccessToken('xyz789');
-    expect(store.accessToken).toBe('xyz789');
+    expect(store.token).toBe('xyz789');
   });
 
   // 测试设置空的访问菜单列表

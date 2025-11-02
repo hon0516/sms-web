@@ -4,7 +4,7 @@ import type { MenuRecordRaw } from '@vben-core/typings';
 
 import { acceptHMRUpdate, defineStore } from 'pinia';
 
-type AccessToken = null | string;
+type Token = null | string;
 
 interface AccessState {
   /**
@@ -19,10 +19,6 @@ interface AccessState {
    * 可访问的路由列表
    */
   accessRoutes: RouteRecordRaw[];
-  /**
-   * 登录 accessToken
-   */
-  accessToken: AccessToken;
   /**
    * 是否已经检查过权限
    */
@@ -42,7 +38,11 @@ interface AccessState {
   /**
    * 登录 accessToken
    */
-  refreshToken: AccessToken;
+  refreshToken: Token;
+  /**
+   * 登录 accessToken
+   */
+  token: Token;
 }
 
 /**
@@ -82,8 +82,8 @@ export const useAccessStore = defineStore('core-access', {
     setAccessRoutes(routes: RouteRecordRaw[]) {
       this.accessRoutes = routes;
     },
-    setAccessToken(token: AccessToken) {
-      this.accessToken = token;
+    setAccessToken(token: Token) {
+      this.token = token;
     },
     setIsAccessChecked(isAccessChecked: boolean) {
       this.isAccessChecked = isAccessChecked;
@@ -91,7 +91,7 @@ export const useAccessStore = defineStore('core-access', {
     setLoginExpired(loginExpired: boolean) {
       this.loginExpired = loginExpired;
     },
-    setRefreshToken(token: AccessToken) {
+    setRefreshToken(token: Token) {
       this.refreshToken = token;
     },
     unlockScreen() {
@@ -102,7 +102,7 @@ export const useAccessStore = defineStore('core-access', {
   persist: {
     // 持久化
     pick: [
-      'accessToken',
+      'token',
       'refreshToken',
       'accessCodes',
       'isLockScreen',
@@ -113,7 +113,7 @@ export const useAccessStore = defineStore('core-access', {
     accessCodes: [],
     accessMenus: [],
     accessRoutes: [],
-    accessToken: null,
+    token: null,
     isAccessChecked: false,
     isLockScreen: false,
     lockScreenPassword: undefined,
