@@ -6,7 +6,9 @@
           <ListItemMeta :description="item.description">
             <template #title>
               <div class="flex">
-                <a class="mr-[10px]" @click="handleDetail">{{ item.title }}</a>
+                <a class="mr-[10px]" @click="handleDetail(item)">{{
+                  item.title
+                }}</a>
                 <Tag v-if="item.type === 1" color="orange">收</Tag>
                 <Tag v-else color="green">发</Tag>
               </div>
@@ -43,12 +45,10 @@ interface DataItem {
   time: string;
 }
 const data = ref<DataItem[]>([]);
-function handleDetail() {
-  push('/messageDetail');
+function handleDetail(row) {
+  push(`/messageDetail?phone=${row.title}&deviceCode=${row.deviceCode}`);
 }
 async function getList(deviceCode) {
-  console.log(deviceCode, 'deviceCode');
-
   const res = await getMessageListApi({
     deviceCode:
       deviceCode.length > 0 && deviceCode[0] ? deviceCode.join(',') : undefined,
@@ -61,6 +61,7 @@ async function getList(deviceCode) {
             description: i.lastMessage,
             time: i.lastTime,
             type: i.lastType,
+            deviceCode: i.deviceCode,
           };
         })
       : [];

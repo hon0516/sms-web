@@ -37,3 +37,14 @@ export async function sendMessageApi(data) {
 export async function bindDeviceApi(data) {
   return requestClient.post('/device/bindUser', data);
 }
+export async function updateDeviceApi(data) {
+  return requestClient.post('/device/update', data);
+}
+export async function getTaskListApi() {
+  return requestClient.get('/sms/getTaskList');
+}
+export async function updateIntervalApi(params) {
+  return requestClient.post(
+    `/sms/updateInterval?taskId=${params.taskId}&newIntervalMinutes=${params.newIntervalMinutes}`,
+  );
+}

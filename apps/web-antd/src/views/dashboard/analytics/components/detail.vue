@@ -61,9 +61,9 @@
         @keyup.enter="sendMessage"
         v-model:value="message"
       />
-      <div class="send-button">
-        <AButton type="primary" @click="sendMessage">发送</AButton>
-      </div>
+    </div>
+    <div class="send-button">
+      <AButton type="primary" @click="sendMessage">发送</AButton>
     </div>
   </section>
 </template>
@@ -94,11 +94,9 @@ function handleBack() {
 }
 // 滚动到底部的函数
 const scrollToBottom = () => {
-  // 确保容器存在
-  if (scrollContainer.value) {
-    // 核心代码：将滚动位置设置为容器可滚动的总高度[citation:1][citation:2]
-    scrollContainer.value.scrollTop = scrollContainer.value.scrollHeight;
-  }
+  // message-content
+  const el = document.querySelector('.message-content');
+  el.scrollTop = el.scrollHeight;
 };
 async function getMessageRecord() {
   const res = await getMessageRecordApi({
@@ -109,8 +107,6 @@ async function getMessageRecord() {
 }
 async function sendMessage() {
   const smsSlot = messageList.value[0].simSlot;
-  console.log(smsSlot);
-
   messageList.value.push({
     id: Date.now(),
     type: 0,
@@ -148,6 +144,7 @@ onMounted(() => {
 <style lang="less" scoped>
 .MessageDetail {
   height: 100%;
+  position: relative;
   // margin: 50px 200px;
   background: #fff;
   // border-radius: 20px;
@@ -159,7 +156,7 @@ onMounted(() => {
   }
   .message-content {
     padding: 30px;
-    height: calc(100% - 290px);
+    height: 550px;
     // flex: 1;
     overflow-y: auto;
     .mesage-detail {
@@ -177,16 +174,17 @@ onMounted(() => {
     border-radius: 0 0 20px 20px;
     border-top: 1px solid #d5d5d5;
     position: relative;
-    .send-button {
-      position: absolute;
-      right: 20px;
-      bottom: 10px;
-    }
+
     :deep .ant-input {
       height: 100%;
       border: none;
       background: transparent;
     }
+  }
+  .send-button {
+    position: absolute;
+    right: 20px;
+    bottom: 20px;
   }
 }
 </style>

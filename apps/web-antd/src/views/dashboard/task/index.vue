@@ -10,8 +10,6 @@
 
         <template v-else-if="column.key === 'action'">
           <span>
-            <a style="color: #1677ff" @click="handleBind(record)">绑定设备</a>
-            <ADivider type="vertical" />
             <a
               v-if="userStore.userInfo.account === 'admin'"
               style="color: #1677ff"
@@ -31,19 +29,11 @@
           @finish="handleOk"
           autocomplete="off"
         >
-          <AFormItem label="设备编号">
-            <span>{{ messageInfo.deviceCode }}</span>
-            <!-- <AInput
-              readonly
-              v-model:value="messageInfo.deviceCode"
-              placeholder="输入设备编号"
-            /> -->
-          </AFormItem>
-          <AFormItem label="发送间隔" name="defaultInterval">
+          <AFormItem label="时间间隔" name="newIntervalMinutes">
             <ASelect
-              v-model:value="messageInfo.defaultInterval"
+              v-model:value="messageInfo.newIntervalMinutes"
               style="width: 100%"
-              placeholder="选择发送间隔"
+              placeholder="选择时间间隔"
               :options="[
                 { value: 1, label: '1分钟' },
                 { value: 2, label: '2分钟' },
@@ -56,8 +46,8 @@
           <AFormItem :wrapper-col="{ span: 14, offset: 4 }">
             <AButton
               style="margin-right: 10px"
-              type="primary"
               :loading="loading"
+              type="primary"
               html-type="submit"
             >
               确认
@@ -76,7 +66,6 @@ import { useUserStore } from '@vben/stores';
 
 import {
   Button as AButton,
-  Divider as ADivider,
   Form as AForm,
   FormItem as AFormItem,
   Modal as AModal,
@@ -86,20 +75,28 @@ import {
 } from 'ant-design-vue';
 import dayjs from 'dayjs';
 
-import {
-  bindDeviceApi,
-  getDeviceListApi,
-  updateDeviceApi,
-} from '#/api/core/sms';
+import { getTaskListApi, updateIntervalApi } from '#/api/core/sms';
 
 const columns = [
   {
-    title: '设备编号',
-    dataIndex: 'deviceCode',
+    title: '任务名称',
+    dataIndex: 'batchName',
   },
   {
-    title: '发送间隔',
-    dataIndex: 'defaultInterval',
+    title: '内容',
+    dataIndex: 'content',
+  },
+  {
+    title: '时间间隔',
+    dataIndex: 'intervalMinutes',
+  },
+  {
+    title: '总任务数',
+    dataIndex: 'totalCount',
+  },
+  {
+    title: '已发送任务数',
+    dataIndex: 'sendCount',
   },
   {
     title: '创建时间',
@@ -111,26 +108,34 @@ const columns = [
     key: 'action',
   },
 ];
-const loading = ref(false);
 const userStore = useUserStore();
+const loading = ref(false);
 const tableData = ref([]);
 const visible = ref(false);
-const messageInfo = ref({});
-async function getDeviceList() {
-  const res = await getDeviceListApi();
+const messageInfo = ref({
+  id: '',
+  newIntervalMinutes: undefined,
+});
+async function getTaskList() {
+  const res = await getTaskListApi();
   tableData.value = Array.isArray(res) && res.length > 0 ? res : [];
 }
 function handleEdit(record) {
-  messageInfo.value = JSON.parse(JSON.stringify(record));
+  // messageInfo.value = JSON.parse(JSON.stringify(record));
+  messageInfo.value.id = record.id;
+  messageInfo.value.newIntervalMinutes = record.intervalMinutes;
   visible.value = true;
 }
 async function handleOk() {
   loading.value = true;
-  const res = await updateDeviceApi(messageInfo.value);
-  if (res === 1) {
-    message.success('修改成功');
+  const res = await updateIntervalApi({
+    taskId: messageInfo.value.id,
+    newIntervalMinutes: messageInfo.value.newIntervalMinutes,
+  });
+  if (res && res.includes('成功')) {
+    message.success(res);
     visible.value = false;
-    getDeviceList();
+    getTaskList();
   } else {
     message.error(res);
   }
@@ -138,19 +143,7 @@ async function handleOk() {
     loading.value = false;
   }, 300);
 }
-async function handleBind(record) {
-  const res = await bindDeviceApi({
-    userId: userStore.userInfo.id,
-    deviceId: record.deviceId,
-    deviceCode: record.deviceCode,
-  });
-  if (res === 1) {
-    message.success('绑定成功');
-  } else {
-    message.error(res);
-  }
-}
 onMounted(() => {
-  getDeviceList();
+  getTaskList();
 });
 </script>

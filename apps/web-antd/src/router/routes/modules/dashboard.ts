@@ -20,6 +20,15 @@ const routes: RouteRecordRaw[] = [
     },
   },
   {
+    name: 'Task ',
+    path: '/task',
+    component: () => import('#/views/dashboard/task/index.vue'),
+    meta: {
+      // icon: 'lucide:area-chart',
+      title: '任务管理',
+    },
+  },
+  {
     name: 'MessageDetail',
     path: '/messageDetail',
     component: () =>
