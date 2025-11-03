@@ -14,7 +14,8 @@
               v-if="userStore.userInfo.account === 'admin'"
               style="color: #1677ff"
               @click="handleEdit(record)"
-              >修改间隔</a>
+              >修改间隔</a
+            >
           </span>
         </template>
       </template>
@@ -68,10 +69,10 @@ import {
   Button as AButton,
   Form as AForm,
   FormItem as AFormItem,
+  message,
   Modal as AModal,
   Select as ASelect,
   Table as ATable,
-  message,
 } from 'ant-design-vue';
 import dayjs from 'dayjs';
 
@@ -96,7 +97,7 @@ const columns = [
   },
   {
     title: '已发送任务数',
-    dataIndex: 'sendCount',
+    dataIndex: 'sentCount',
   },
   {
     title: '创建时间',

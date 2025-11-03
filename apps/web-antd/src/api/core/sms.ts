@@ -35,7 +35,7 @@ export async function sendMessageApi(data) {
 }
 
 export async function bindDeviceApi(data) {
-  return requestClient.post('/device/bindUser', data);
+  return requestClient.post('/device/bindUsers', data);
 }
 export async function updateDeviceApi(data) {
   return requestClient.post('/device/update', data);
@@ -47,4 +47,14 @@ export async function updateIntervalApi(params) {
   return requestClient.post(
     `/sms/updateInterval?taskId=${params.taskId}&newIntervalMinutes=${params.newIntervalMinutes}`,
   );
+}
+
+export async function getUserListApi(params) {
+  return requestClient.get('/user/list', params);
+}
+export async function delDeviceApi(params) {
+  return requestClient.post(`/device/delete?deviceId=${params.deviceId}`);
+}
+export async function getDeviceCodeByPhoneApi(params) {
+  return requestClient.get('/message/getDeviceCodeByPhone', params);
 }

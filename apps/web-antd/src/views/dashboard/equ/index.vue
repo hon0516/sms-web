@@ -4,19 +4,49 @@
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'createTime'">
           <span>
-            {{ dayjs(record.createTime).format('YYYY-MM-DD HH:mm:ss') }}
+            {{
+              record.createTime
+                ? dayjs(record.createTime).format('YYYY-MM-DD HH:mm:ss')
+                : '-'
+            }}
           </span>
         </template>
-
+        <template v-if="column.key === 'lastOnlineTime'">
+          <span>
+            {{
+              record.lastOnlineTime
+                ? dayjs(record.lastOnlineTime).format('YYYY-MM-DD HH:mm:ss')
+                : '-'
+            }}
+          </span>
+        </template>
+        <template v-else-if="column.key === 'isOnline'">
+          <Tag v-if="record.isOnline === 1" color="green">在线</Tag>
+          <Tag v-else color="red">离线</Tag>
+        </template>
         <template v-else-if="column.key === 'action'">
           <span>
-            <a style="color: #1677ff" @click="handleBind(record)">绑定设备</a>
+            <a style="color: #1677ff" @click="handleBind(record)">分配用户</a>
             <ADivider type="vertical" />
             <a
               v-if="userStore.userInfo.account === 'admin'"
               style="color: #1677ff"
               @click="handleEdit(record)"
-              >修改间隔</a>
+              >修改间隔</a
+            >
+            <ADivider type="vertical" />
+            <a-popconfirm
+              title="是否确认删除?"
+              ok-text="是"
+              cancel-text="否"
+              @confirm="handleDel(record)"
+            >
+              <a
+                v-if="userStore.userInfo.account === 'admin'"
+                style="color: #ff4848"
+                >删除</a
+              >
+            </a-popconfirm>
           </span>
         </template>
       </template>
@@ -33,11 +63,6 @@
         >
           <AFormItem label="设备编号">
             <span>{{ messageInfo.deviceCode }}</span>
-            <!-- <AInput
-              readonly
-              v-model:value="messageInfo.deviceCode"
-              placeholder="输入设备编号"
-            /> -->
           </AFormItem>
           <AFormItem label="发送间隔" name="defaultInterval">
             <ASelect
@@ -67,6 +92,39 @@
         </AForm>
       </div>
     </AModal>
+    <AModal v-model:open="visible1" :footer="null" title="分配用户">
+      <div>
+        <AForm
+          :model="userInfo"
+          name="basic"
+          :label-col="{ span: 4 }"
+          :wrapper-col="{ span: 20 }"
+          @finish="submitBind"
+          autocomplete="off"
+        >
+          <AFormItem label="选择用户">
+            <ASelect
+              v-model:value="userInfo.userIds"
+              style="width: 100%"
+              mode="tags"
+              showSearch
+              placeholder="选择用户"
+              :options="usersOptions"
+            />
+          </AFormItem>
+          <AFormItem :wrapper-col="{ span: 14, offset: 4 }">
+            <AButton
+              style="margin-right: 10px"
+              type="primary"
+              html-type="submit"
+            >
+              确认
+            </AButton>
+            <AButton @click="visible1 = false"> 取消 </AButton>
+          </AFormItem>
+        </AForm>
+      </div>
+    </AModal>
   </div>
 </template>
 <script lang="ts" setup>
@@ -79,16 +137,20 @@ import {
   Divider as ADivider,
   Form as AForm,
   FormItem as AFormItem,
+  message,
   Modal as AModal,
+  Popconfirm as APopconfirm,
   Select as ASelect,
   Table as ATable,
-  message,
+  Tag,
 } from 'ant-design-vue';
 import dayjs from 'dayjs';
 
 import {
   bindDeviceApi,
+  delDeviceApi,
   getDeviceListApi,
+  getUserListApi,
   updateDeviceApi,
 } from '#/api/core/sms';
 
@@ -102,10 +164,21 @@ const columns = [
     dataIndex: 'defaultInterval',
   },
   {
+    title: '在线状态',
+    dataIndex: 'isOnline',
+    key: 'isOnline',
+  },
+  {
+    title: '最后更新时间',
+    dataIndex: 'lastOnlineTime',
+    key: 'lastOnlineTime',
+  },
+  {
     title: '创建时间',
     dataIndex: 'createTime',
     key: 'createTime',
   },
+
   {
     title: '操作',
     key: 'action',
@@ -116,6 +189,14 @@ const userStore = useUserStore();
 const tableData = ref([]);
 const visible = ref(false);
 const messageInfo = ref({});
+const visible1 = ref(false);
+const userInfo = ref({
+  userIds: [],
+  deviceId: '',
+  deviceCode: '',
+});
+const usersOptions = ref([]);
+
 async function getDeviceList() {
   const res = await getDeviceListApi();
   tableData.value = Array.isArray(res) && res.length > 0 ? res : [];
@@ -123,6 +204,17 @@ async function getDeviceList() {
 function handleEdit(record) {
   messageInfo.value = JSON.parse(JSON.stringify(record));
   visible.value = true;
+}
+async function handleDel(record) {
+  const res = await delDeviceApi({
+    deviceId: record.deviceId,
+  });
+  if (res == 1) {
+    message.success('删除成功');
+    getDeviceList();
+  } else {
+    message.error(res);
+  }
 }
 async function handleOk() {
   loading.value = true;
@@ -138,17 +230,41 @@ async function handleOk() {
     loading.value = false;
   }, 300);
 }
-async function handleBind(record) {
+function handleBind(record) {
+  userInfo.value.deviceId = record.deviceId;
+  userInfo.value.deviceCode = record.deviceCode;
+  getUserList();
+  visible1.value = true;
+}
+async function submitBind() {
+  const array = userInfo.value.userIds;
   const res = await bindDeviceApi({
-    userId: userStore.userInfo.id,
-    deviceId: record.deviceId,
-    deviceCode: record.deviceCode,
+    userIds: array.map((item) => item).join(),
+    deviceId: userInfo.value.deviceId,
+    deviceCode: userInfo.value.deviceCode,
   });
-  if (res === 1) {
-    message.success('绑定成功');
+  if (res == 1) {
+    message.success('操作成功');
+    visible1.value = false;
   } else {
     message.error(res);
   }
+}
+async function getUserList() {
+  const res = await getUserListApi({
+    deviceId: userInfo.value.deviceId,
+  });
+  userInfo.value.userIds =
+    Array.isArray(res) && res.length > 0
+      ? res.filter((i) => i.isBind === 1).map((item) => item.userId)
+      : [];
+  usersOptions.value =
+    Array.isArray(res) && res.length > 0
+      ? res.map((item) => ({
+          value: item.userId,
+          label: item.account,
+        }))
+      : [];
 }
 onMounted(() => {
   getDeviceList();

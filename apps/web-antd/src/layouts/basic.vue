@@ -111,7 +111,7 @@ watch(
       await updateWatermark({
         content:
           content ||
-          `${userStore.userInfo?.username} - ${userStore.userInfo?.realName}`,
+          `${userStore.userInfo?.username} - ${userStore.userInfo?.name}`,
       });
     } else {
       destroyWatermark();

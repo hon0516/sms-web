@@ -33,14 +33,14 @@ export const useAuthStore = defineStore('auth', () => {
     let userInfo: null | UserInfo = null;
     try {
       loginLoading.value = true;
-      const { token } = await loginApi(params);
+      const { token, name } = await loginApi(params);
 
       // 如果成功获取到 accessToken
       if (token) {
         accessStore.setAccessToken(token);
 
         // 获取用户信息并存储到 accessStore 中
-        const fetchUserInfoResult = await fetchUserInfo();
+        const fetchUserInfoResult = await fetchUserInfo(name);
 
         userInfo = fetchUserInfoResult;
 
@@ -94,25 +94,12 @@ export const useAuthStore = defineStore('auth', () => {
     });
   }
 
-  async function fetchUserInfo() {
+  async function fetchUserInfo(name: string) {
     let userInfo: null | UserInfo = null;
     const obj = {
-      id: '1',
-      createBy: 'admin',
-      createTime: '2020-09-28T02:27:53.000+00:00',
-      lastUpdateBy: 'superadmin',
-      lastUpdateTime: '2025-10-27T13:12:35.000+00:00',
-      account: 'admin',
-      name: '管理员',
-      email: 'admin@qq.com',
-      mobile: '13212341234',
-      sex: 1,
+      account: name,
+      name,
       status: 1,
-      deptId: '8',
-      postId: '7930621774703100418',
-      postName: '技术管理员',
-      adminFlag: 1,
-      delFlag: 0,
       perms: ['sys:del'],
     };
     userInfo = obj;

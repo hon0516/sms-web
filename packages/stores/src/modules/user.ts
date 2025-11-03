@@ -51,6 +51,10 @@ export const useUserStore = defineStore('core-user', {
       this.userRoles = roles;
     },
   },
+  persist: {
+    // 持久化
+    pick: ['userInfo'],
+  },
   state: (): AccessState => ({
     userInfo: null,
     userRoles: [],

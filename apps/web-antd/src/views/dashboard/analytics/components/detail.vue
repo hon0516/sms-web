@@ -1,13 +1,25 @@
 <template>
   <section class="MessageDetail">
-    <APageHeader
-      style="border: 1px solid rgb(235 237 240)"
-      :title="`${query.deviceCode} ${query.phone}`"
-      @back="handleBack"
-    />
+    <APageHeader style="border: 1px solid rgb(235 237 240)" @back="handleBack">
+      <template #title>
+        <!-- {{ query.deviceCode }}  -->
+        <ASelect
+          v-model:value="currentDevice"
+          style="width: 160px; margin-right: 10px"
+          :allow-clear="false"
+          :options="deviceOptions"
+          @change="handleDeviceChange"
+        />
+        {{ query.phone }}
+      </template>
+
+      <template #extra>
+        <AButton type="primary" @click="getMessageRecord">刷新消息</AButton>
+      </template>
+    </APageHeader>
     <div class="message-content" ref="scrollContainer">
       <div v-for="item in messageList" :key="item.id">
-        <div class="flex justify-end" v-if="item.type === 0">
+        <div class="mb-[10px] flex justify-end" v-if="item.type === 0">
           <div class="flex flex-col items-end">
             <div class="mesage-detail">
               {{ item.simSlot === 0 ? 'SIM1' : 'SIM2' }} &nbsp;{{
@@ -78,17 +90,23 @@ import {
   Button as AButton,
   message as AMessage,
   PageHeader as APageHeader,
+  Select as ASelect,
   Textarea as ATextarea,
 } from 'ant-design-vue';
 import dayjs from 'dayjs';
 
-import { getMessageRecordApi, sendMessageApi } from '#/api/core/sms';
-
+import {
+  getDeviceCodeByPhoneApi,
+  getMessageRecordApi,
+  sendMessageApi,
+} from '#/api/core/sms';
+const currentDevice = ref('');
 const { query } = useRoute();
 const scrollContainer = ref();
 const message = ref('');
 const messageRef = ref();
 const messageList = ref([]);
+const deviceOptions = ref([]);
 function handleBack() {
   window.history.back();
 }
@@ -101,7 +119,7 @@ const scrollToBottom = () => {
 async function getMessageRecord() {
   const res = await getMessageRecordApi({
     phone: query.phone,
-    deviceCode: query.deviceCode,
+    deviceCode: currentDevice.value,
   });
   messageList.value = res;
 }
@@ -117,13 +135,13 @@ async function sendMessage() {
   });
   const res = await sendMessageApi({
     phone: query.phone,
-    deviceCode: query.deviceCode,
+    deviceCode: currentDevice.value,
     content: message.value,
     smsSlot,
   });
   message.value = '';
 
-  if (res === 1) {
+  if (res == 1) {
     messageList.value[messageList.value.length - 1].status = 'success';
   } else {
     AMessage.error(res);
@@ -131,13 +149,31 @@ async function sendMessage() {
 
   // getMessageRecord();
 }
+function handleDeviceChange(data) {
+  console.log(data);
+  currentDevice.value = data;
+  getMessageRecord();
+}
+async function getDeviceCodeByPhone() {
+  const res = await getDeviceCodeByPhoneApi({
+    phone: query.phone,
+  });
+  deviceOptions.value = res.map((item) => {
+    return {
+      label: item,
+      value: item,
+    };
+  });
+}
 onMounted(() => {
+  currentDevice.value = query.deviceCode;
   if (messageRef.value) {
     messageRef.value.focus();
   }
   nextTick(() => {
     scrollToBottom();
   });
+  getDeviceCodeByPhone();
   getMessageRecord();
 });
 </script>
@@ -156,7 +192,7 @@ onMounted(() => {
   }
   .message-content {
     padding: 30px;
-    height: 550px;
+    height: 545px;
     // flex: 1;
     overflow-y: auto;
     .mesage-detail {
