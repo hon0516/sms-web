@@ -58,3 +58,7 @@ export async function delDeviceApi(params) {
 export async function getDeviceCodeByPhoneApi(params) {
   return requestClient.get('/message/getDeviceCodeByPhone', params);
 }
+
+export async function getTaskDeatilApi(params) {
+  return requestClient.get('/sms/getTaskDetail', params);
+}

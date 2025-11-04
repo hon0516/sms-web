@@ -16,6 +16,10 @@
               @click="handleEdit(record)"
               >修改间隔</a
             >
+            <ADivider type="vertical" />
+            <a style="color: #1677ff" @click="handleDetail(record)">
+              查看详情</a
+            >
           </span>
         </template>
       </template>
@@ -58,6 +62,27 @@
         </AForm>
       </div>
     </AModal>
+    <AModal
+      :width="1300"
+      v-model:open="visible1"
+      :footer="null"
+      title="任务详情"
+    >
+      <ATable
+        :pagination="false"
+        :columns="detailColumns"
+        :data-source="detailTableData"
+        :scroll="{ y: 500 }"
+      >
+        <template #bodyCell="{ column, record }">
+          <template v-if="column.key === 'simSlot'">
+            <span>
+              {{ record.simSlot === 0 ? '卡槽1' : '卡槽2' }}
+            </span>
+          </template>
+        </template>
+      </ATable>
+    </AModal>
   </div>
 </template>
 <script lang="ts" setup>
@@ -67,52 +92,112 @@ import { useUserStore } from '@vben/stores';
 
 import {
   Button as AButton,
+  Divider as ADivider,
   Form as AForm,
   FormItem as AFormItem,
-  message,
   Modal as AModal,
   Select as ASelect,
   Table as ATable,
+  message,
 } from 'ant-design-vue';
 import dayjs from 'dayjs';
 
-import { getTaskListApi, updateIntervalApi } from '#/api/core/sms';
+import {
+  getTaskDeatilApi,
+  getTaskListApi,
+  updateIntervalApi,
+} from '#/api/core/sms';
 
 const columns = [
   {
     title: '任务名称',
     dataIndex: 'batchName',
+    width: 160,
   },
   {
     title: '内容',
     dataIndex: 'content',
+    // width: 300,
+    ellipsis: true,
   },
   {
     title: '时间间隔',
     dataIndex: 'intervalMinutes',
+    width: 100,
   },
   {
     title: '总任务数',
     dataIndex: 'totalCount',
+    width: 120,
   },
   {
     title: '已发送任务数',
     dataIndex: 'sentCount',
+    width: 120,
   },
   {
     title: '创建时间',
     dataIndex: 'createTime',
     key: 'createTime',
+    width: 200,
   },
   {
     title: '操作',
     key: 'action',
+    width: 200,
+  },
+];
+const detailColumns = [
+  {
+    title: '设备编号',
+    dataIndex: 'deviceCode',
+    width: 160,
+  },
+  {
+    title: '目标手机号',
+    dataIndex: 'phone',
+    width: 200,
+  },
+  {
+    title: '手机卡槽',
+    dataIndex: 'simSlot',
+    key: 'simSlot',
+    width: 120,
+  },
+  {
+    title: '短信内容',
+    dataIndex: 'content',
+    width: 220,
+    ellipsis: true,
+  },
+  {
+    title: '计划发送时间',
+    dataIndex: 'sendTime',
+    width: 180,
+  },
+  {
+    title: '发送状态',
+    dataIndex: 'status',
+    width: 120,
+  },
+  {
+    title: '状态说明',
+    dataIndex: 'statusDesc',
+    width: 220,
+    ellipsis: true,
+  },
+  {
+    title: '创建时间',
+    dataIndex: 'createTime',
+    width: 180,
   },
 ];
 const userStore = useUserStore();
 const loading = ref(false);
 const tableData = ref([]);
+const detailTableData = ref([]);
 const visible = ref(false);
+const visible1 = ref(false);
 const messageInfo = ref({
   id: '',
   newIntervalMinutes: undefined,
@@ -126,6 +211,13 @@ function handleEdit(record) {
   messageInfo.value.id = record.id;
   messageInfo.value.newIntervalMinutes = record.intervalMinutes;
   visible.value = true;
+}
+async function handleDetail(record) {
+  visible1.value = true;
+  const res = await getTaskDeatilApi({
+    taskId: record.id,
+  });
+  detailTableData.value = Array.isArray(res) && res.length > 0 ? res : [];
 }
 async function handleOk() {
   loading.value = true;
