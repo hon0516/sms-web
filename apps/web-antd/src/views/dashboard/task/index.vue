@@ -7,7 +7,11 @@
             {{ dayjs(record.createTime).format('YYYY-MM-DD HH:mm:ss') }}
           </span>
         </template>
-
+        <template v-else-if="column.key === 'status'">
+          <span>
+            {{ getStatusText(record.status) }}
+          </span>
+        </template>
         <template v-else-if="column.key === 'action'">
           <span>
             <a
@@ -16,7 +20,55 @@
               @click="handleEdit(record)"
               >修改间隔</a
             >
+            <ADivider
+              type="vertical"
+              v-if="
+                userStore.userInfo.account === 'admin' && record.status === 1
+              "
+            />
+            <a
+              v-if="
+                userStore.userInfo.account === 'admin' && record.status === 1
+              "
+              style="color: #1677ff"
+              @click="handlePause(record)"
+              >暂停</a
+            >
             <ADivider type="vertical" />
+            <a
+              v-if="
+                userStore.userInfo.account === 'admin' && record.status === 2
+              "
+              style="color: #1677ff"
+              @click="handleResume(record)"
+              >继续</a
+            >
+            <ADivider
+              type="vertical"
+              v-if="
+                userStore.userInfo.account === 'admin' && record.status === 2
+              "
+            />
+            <a-popconfirm
+              title="是否确认删除?"
+              ok-text="是"
+              cancel-text="否"
+              @confirm="handleDel(record)"
+            >
+              <a
+                v-if="
+                  userStore.userInfo.account === 'admin' && record.status !== 4
+                "
+                style="color: #ff4848"
+                >删除</a
+              >
+            </a-popconfirm>
+            <ADivider
+              type="vertical"
+              v-if="
+                userStore.userInfo.account === 'admin' && record.status !== 4
+              "
+            />
             <a style="color: #1677ff" @click="handleDetail(record)">
               查看详情</a
             >
@@ -95,16 +147,20 @@ import {
   Divider as ADivider,
   Form as AForm,
   FormItem as AFormItem,
+  message,
   Modal as AModal,
+  Popconfirm as APopconfirm,
   Select as ASelect,
   Table as ATable,
-  message,
 } from 'ant-design-vue';
 import dayjs from 'dayjs';
 
 import {
+  delTaskApi,
   getTaskDeatilApi,
   getTaskListApi,
+  pauseTaskApi,
+  resumeTaskApi,
   updateIntervalApi,
 } from '#/api/core/sms';
 
@@ -142,9 +198,15 @@ const columns = [
     width: 200,
   },
   {
+    title: '状态',
+    dataIndex: 'status',
+    key: 'status',
+    width: 120,
+  },
+  {
     title: '操作',
     key: 'action',
-    width: 200,
+    width: 300,
   },
 ];
 const detailColumns = [
@@ -202,6 +264,15 @@ const messageInfo = ref({
   id: '',
   newIntervalMinutes: undefined,
 });
+function getStatusText(status) {
+  return statusMap.value[status];
+}
+const statusMap = ref({
+  1: '执行中',
+  2: '已暂停',
+  3: '已完成',
+  4: '已删除',
+});
 async function getTaskList() {
   const res = await getTaskListApi();
   tableData.value = Array.isArray(res) && res.length > 0 ? res : [];
@@ -235,6 +306,27 @@ async function handleOk() {
   setTimeout(() => {
     loading.value = false;
   }, 300);
+}
+async function handlePause(record) {
+  const res = await pauseTaskApi({
+    batchId: record.id,
+  });
+  message.success(res);
+  getTaskList();
+}
+async function handleResume(record) {
+  const res = await resumeTaskApi({
+    batchId: record.id,
+  });
+  message.success(res);
+  getTaskList();
+}
+async function handleDel(record) {
+  const res = await delTaskApi({
+    batchId: record.id,
+  });
+  message.success(res);
+  getTaskList();
 }
 onMounted(() => {
   getTaskList();

@@ -62,3 +62,13 @@ export async function getDeviceCodeByPhoneApi(params) {
 export async function getTaskDeatilApi(params) {
   return requestClient.get('/sms/getTaskDetail', params);
 }
+
+export async function pauseTaskApi(params) {
+  return requestClient.post(`/sms/pause/${params.batchId}`);
+}
+export async function resumeTaskApi(params) {
+  return requestClient.post(`/sms/resume/${params.batchId}`);
+}
+export async function delTaskApi(params) {
+  return requestClient.post(`/sms/delete/${params.batchId}`);
+}
