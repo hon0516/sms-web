@@ -27,48 +27,28 @@
               "
             />
             <a
-              v-if="
-                userStore.userInfo.account === 'admin' && record.status === 1
-              "
+              v-if="record.status === 1"
               style="color: #1677ff"
               @click="handlePause(record)"
               >暂停</a
             >
             <ADivider type="vertical" />
             <a
-              v-if="
-                userStore.userInfo.account === 'admin' && record.status === 2
-              "
+              v-if="record.status === 2"
               style="color: #1677ff"
               @click="handleResume(record)"
               >继续</a
             >
-            <ADivider
-              type="vertical"
-              v-if="
-                userStore.userInfo.account === 'admin' && record.status === 2
-              "
-            />
-            <a-popconfirm
+            <ADivider type="vertical" v-if="record.status === 2" />
+            <APopconfirm
               title="是否确认删除?"
               ok-text="是"
               cancel-text="否"
               @confirm="handleDel(record)"
             >
-              <a
-                v-if="
-                  userStore.userInfo.account === 'admin' && record.status !== 4
-                "
-                style="color: #ff4848"
-                >删除</a
-              >
-            </a-popconfirm>
-            <ADivider
-              type="vertical"
-              v-if="
-                userStore.userInfo.account === 'admin' && record.status !== 4
-              "
-            />
+              <a v-if="record.status !== 4" style="color: #ff4848">删除</a>
+            </APopconfirm>
+            <ADivider type="vertical" v-if="record.status !== 4" />
             <a style="color: #1677ff" @click="handleDetail(record)">
               查看详情</a
             >
@@ -147,11 +127,11 @@ import {
   Divider as ADivider,
   Form as AForm,
   FormItem as AFormItem,
-  message,
   Modal as AModal,
   Popconfirm as APopconfirm,
   Select as ASelect,
   Table as ATable,
+  message,
 } from 'ant-design-vue';
 import dayjs from 'dayjs';
 

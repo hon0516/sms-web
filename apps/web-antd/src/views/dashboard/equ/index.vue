@@ -36,27 +36,15 @@
               type="vertical"
               v-if="userStore.userInfo.account === 'admin'"
             />
-            <a
-              v-if="userStore.userInfo.account === 'admin'"
-              style="color: #1677ff"
-              @click="handleEdit(record)"
-              >修改间隔</a
-            >
-            <ADivider
-              type="vertical"
-              v-if="userStore.userInfo.account === 'admin'"
-            />
+            <a style="color: #1677ff" @click="handleEdit(record)">修改间隔</a>
+            <ADivider type="vertical" />
             <APopconfirm
               title="是否确认删除?"
               ok-text="是"
               cancel-text="否"
               @confirm="handleDel(record)"
             >
-              <a
-                v-if="userStore.userInfo.account === 'admin'"
-                style="color: #ff4848"
-                >删除</a
-              >
+              <a style="color: #ff4848">删除</a>
             </APopconfirm>
           </span>
         </template>

@@ -46,7 +46,9 @@ interface DataItem {
 }
 const data = ref<DataItem[]>([]);
 function handleDetail(row) {
-  push(`/messageDetail?phone=${row.title}&deviceCode=${row.deviceCode}`);
+  push(
+    `/messageDetail?phone=${encodeURIComponent(row.title)}&deviceCode=${row.deviceCode}`,
+  );
 }
 async function getList(deviceCode) {
   const res = await getMessageGroupListApi({
