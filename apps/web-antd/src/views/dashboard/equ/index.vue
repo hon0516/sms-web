@@ -36,7 +36,7 @@
               type="vertical"
               v-if="userStore.userInfo.account === 'admin'"
             />
-            <a style="color: #1677ff" @click="handleEdit(record)">修改间隔</a>
+            <a style="color: #1677ff" @click="handleEdit(record)">编辑</a>
             <ADivider type="vertical" />
             <APopconfirm
               title="是否确认删除?"
@@ -50,7 +50,7 @@
         </template>
       </template>
     </ATable>
-    <AModal v-model:open="visible" :footer="null" title="修改间隔">
+    <AModal v-model:open="visible" :footer="null" title="编辑">
       <div>
         <AForm
           :model="messageInfo"
@@ -62,6 +62,13 @@
         >
           <AFormItem label="设备编号">
             <span>{{ messageInfo.deviceCode }}</span>
+          </AFormItem>
+          <AFormItem label="设备备注" name="remark">
+            <ATextarea
+              :rows="2"
+              placeholder="输入备注"
+              v-model:value="messageInfo.remark"
+            />
           </AFormItem>
           <AFormItem label="发送间隔" name="defaultInterval">
             <ASelect
@@ -136,12 +143,13 @@ import {
   Divider as ADivider,
   Form as AForm,
   FormItem as AFormItem,
+  message,
   Modal as AModal,
   Popconfirm as APopconfirm,
   Select as ASelect,
   Table as ATable,
-  message,
   Tag,
+  Textarea as ATextarea,
 } from 'ant-design-vue';
 import dayjs from 'dayjs';
 
@@ -157,6 +165,10 @@ const columns = [
   {
     title: '设备编号',
     dataIndex: 'deviceCode',
+  },
+  {
+    title: '设备备注',
+    dataIndex: 'remark',
   },
   {
     title: '发送间隔',

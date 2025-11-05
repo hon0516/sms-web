@@ -43,10 +43,6 @@ const props = defineProps({
     type: Array,
     default: [],
   },
-  typeValue: {
-    type: Number,
-    default: undefined,
-  },
 });
 const { push } = useRouter();
 interface DataItem {
@@ -76,9 +72,9 @@ async function getList(deviceCode) {
   const res = await getMessageListApi({
     deviceCode:
       deviceCode.length > 0 && deviceCode[0] ? deviceCode.join(',') : undefined,
-    type: props.typeValue,
     pageNum: sendData.value.pageNum,
     pageSize: sendData.value.pageSize,
+    type: 1,
   });
   sendData.value.total = res.total;
   data.value =
@@ -100,14 +96,6 @@ watch(
   (newVal) => {
     getList(newVal);
   },
-  { immediate: true },
-);
-watch(
-  () => props.typeValue,
-  (newVal) => {
-    console.log(newVal, 'newVal');
-
-    getList(props.deviceCode);
-  },
+  { immediate: true, deep: true },
 );
 </script>

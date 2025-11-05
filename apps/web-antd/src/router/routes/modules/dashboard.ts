@@ -8,6 +8,7 @@ const routes: RouteRecordRaw[] = [
     meta: {
       // icon: 'lucide:area-chart',
       title: '总览',
+      keepAlive: true,
     },
   },
   {
@@ -37,6 +38,7 @@ const routes: RouteRecordRaw[] = [
       // icon: 'lucide:area-chart',
       title: '消息详情',
       hideInMenu: true,
+      // hideInTab: true,
     },
   },
 ];

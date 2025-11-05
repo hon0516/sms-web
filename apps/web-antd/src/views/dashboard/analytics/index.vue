@@ -1,8 +1,30 @@
 <template>
   <div class="analytics-box m-[20px]">
     <ATabs v-model:active-key="activeKey">
-      <a-tab-pane key="1" tab="消息分组" />
-      <a-tab-pane key="2" tab="消息记录" />
+      <a-tab-pane key="1">
+        <template #tab>
+          <div style="position: relative">
+            消息分组
+            <a-badge class="workpalce-sub" :count="total.total1" />
+          </div>
+        </template>
+      </a-tab-pane>
+      <a-tab-pane key="2">
+        <template #tab>
+          <div style="position: relative">
+            消息记录
+            <a-badge class="workpalce-sub" :count="total.total2" />
+          </div>
+        </template>
+      </a-tab-pane>
+      <a-tab-pane key="3">
+        <template #tab>
+          <div style="position: relative">
+            已回复消息
+            <a-badge class="workpalce-sub" :count="total.total3" />
+          </div>
+        </template>
+      </a-tab-pane>
     </ATabs>
     <ASelect
       v-model:value="selectValue"
@@ -14,7 +36,30 @@
       @change="handleChange"
     />
 
-    <component :is="componentsMap[activeKey]" :device-code="selectValue" />
+    <ASelect
+      v-if="activeKey == 2"
+      v-model:value="typeValue"
+      placeholder="接收/发送"
+      style="width: 200px; margin-left: 10px"
+      :allow-clear="true"
+      :options="[
+        {
+          value: 1,
+          label: '接收',
+        },
+        {
+          value: 0,
+          label: '发送',
+        },
+      ]"
+      @change="handleChange"
+    />
+
+    <component
+      :is="componentsMap[activeKey]"
+      :device-code="selectValue"
+      :type-value="typeValue"
+    />
     <div>
       <img
         @click="showModal"
@@ -101,30 +146,44 @@
 import { onMounted, reactive, ref } from 'vue';
 
 import {
+  Badge as ABadge,
   Button as AButton,
   Form as AForm,
   FormItem as AFormItem,
+  message,
   Modal as AModal,
   Select as ASelect,
   Tabs as ATabs,
   Textarea as ATextarea,
-  message,
 } from 'ant-design-vue';
 
-import { createMessageBatchApi, getDeviceListApi } from '#/api/core/sms';
+import {
+  createMessageBatchApi,
+  getDeviceListApi,
+  getMessageGroupListApi,
+  getMessageListApi,
+} from '#/api/core/sms';
 // import ImportExcel from '#/components/ImportExcel/ImportExcel.vue';
 
 import MessageRecord from './components/MessageRecord.vue';
 import Notifications from './components/Notifications.vue';
+import ReplyMsg from './components/ReplyMsg.vue';
 
 const visible = ref(false);
 const loading = ref(false);
 const activeKey = ref('1');
+const total = ref({
+  total1: 0,
+  total2: 0,
+  total3: 0,
+});
 const componentsMap = {
   '1': Notifications,
   '2': MessageRecord,
+  '3': ReplyMsg,
 };
 const selectValue = ref([]);
+const typeValue = ref(undefined);
 const messageInfo = reactive({
   codes: [],
   deviceCodes: '',
@@ -189,8 +248,29 @@ const handleOk = async () => {
 function loadDataSuccess(excelDataList) {
   console.log(excelDataList);
 }
+async function getTotalNum() {
+  const [res1, res2, res3] = await Promise.all([
+    getMessageGroupListApi({
+      pageSize: 1,
+      pageNum: 10,
+    }),
+    getMessageListApi({
+      pageSize: 1,
+      pageNum: 10,
+    }),
+    getMessageListApi({
+      pageSize: 1,
+      pageNum: 10,
+      type: 1,
+    }),
+  ]);
+  total.value.total1 = res1.total;
+  total.value.total2 = res2.total;
+  total.value.total3 = res3.total;
+}
 onMounted(() => {
   getDeviceList();
+  getTotalNum();
 });
 </script>
 
@@ -200,6 +280,11 @@ onMounted(() => {
   padding: 20px;
   padding-top: 10px;
   border-radius: 10px;
+  .workpalce-sub {
+    position: absolute;
+    right: -20px;
+    top: -10px;
+  }
   // height: 100%;
 }
 </style>
