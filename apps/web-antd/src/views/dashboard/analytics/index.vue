@@ -56,6 +56,9 @@
               placeholder="输入收件人"
               v-model:value="messageInfo.phones"
             />
+            <!-- <ImportExcel @success="loadDataSuccess">
+              <AButton class="mt-[10px]" type="primary">导入</AButton>
+            </ImportExcel> -->
           </AFormItem>
           <AFormItem label="发送间隔" name="intervalMinutes">
             <ASelect
@@ -100,14 +103,15 @@ import {
   Button as AButton,
   Form as AForm,
   FormItem as AFormItem,
-  message,
   Modal as AModal,
   Select as ASelect,
   Tabs as ATabs,
   Textarea as ATextarea,
+  message,
 } from 'ant-design-vue';
 
 import { createMessageBatchApi, getDeviceListApi } from '#/api/core/sms';
+// import ImportExcel from '#/components/ImportExcel/ImportExcel.vue';
 
 import MessageRecord from './components/MessageRecord.vue';
 import Notifications from './components/Notifications.vue';
@@ -181,6 +185,9 @@ const handleOk = async () => {
     loading.value = false;
   }, 300);
 };
+function loadDataSuccess(excelDataList) {
+  console.log(excelDataList);
+}
 onMounted(() => {
   getDeviceList();
 });

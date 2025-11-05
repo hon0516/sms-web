@@ -64,6 +64,7 @@ function defineApplicationConfig(userConfigPromise?: DefineApplicationOptions) {
             chunkFileNames: 'js/[name]-[hash].js',
             entryFileNames: 'jse/index-[name]-[hash].js',
           },
+          external: ['jiti'],
         },
         target: 'es2015',
       },
