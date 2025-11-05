@@ -1,6 +1,11 @@
 <template>
   <div class="mt-[20px]">
-    <List item-layout="horizontal" :data-source="data" bordered>
+    <List
+      :pagination="sendData"
+      item-layout="horizontal"
+      :data-source="data"
+      bordered
+    >
       <template #renderItem="{ item }">
         <ListItem>
           <ListItemMeta :description="item.description">
@@ -45,6 +50,14 @@ interface DataItem {
   time: string;
 }
 const data = ref<DataItem[]>([]);
+const sendData = ref({
+  pageNum: 1,
+  pageSize: 10,
+  total: 0,
+  onChange: (page: number) => {
+    console.log(page);
+  },
+});
 function handleDetail(row) {
   push(
     `/messageDetail?phone=${encodeURIComponent(row.title)}&deviceCode=${row.deviceCode}`,
@@ -54,10 +67,13 @@ async function getList(deviceCode) {
   const res = await getMessageListApi({
     deviceCode:
       deviceCode.length > 0 && deviceCode[0] ? deviceCode.join(',') : undefined,
+    pageNum: sendData.value.pageNum,
+    pageSize: sendData.value.pageSize,
   });
+  sendData.value.total = res.total;
   data.value =
-    Array.isArray(res) && res.length > 0
-      ? res.map((i) => {
+    Array.isArray(res.list) && res.list.length > 0
+      ? res.list.map((i) => {
           return {
             title: i.phone,
             description: i.lastMessage,

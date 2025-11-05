@@ -13,6 +13,7 @@
       :options="options"
       @change="handleChange"
     />
+
     <component :is="componentsMap[activeKey]" :device-code="selectValue" />
     <div>
       <img

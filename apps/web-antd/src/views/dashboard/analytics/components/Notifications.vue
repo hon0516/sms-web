@@ -54,10 +54,12 @@ async function getList(deviceCode) {
   const res = await getMessageGroupListApi({
     deviceCode:
       deviceCode.length > 0 && deviceCode[0] ? deviceCode.join(',') : undefined,
+    pageSize: 1,
+    pageNum: 10,
   });
   data.value =
-    Array.isArray(res) && res.length > 0
-      ? res.map((i) => {
+    Array.isArray(res.list) && res.list.length > 0
+      ? res.list.map((i) => {
           return {
             title: i.phone,
             description: i.lastMessage,
