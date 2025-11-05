@@ -26,16 +26,27 @@
         </template>
         <template v-else-if="column.key === 'action'">
           <span>
-            <a style="color: #1677ff" @click="handleBind(record)">分配用户</a>
-            <ADivider type="vertical" />
+            <a
+              v-if="userStore.userInfo.account === 'admin'"
+              style="color: #1677ff"
+              @click="handleBind(record)"
+              >分配用户</a
+            >
+            <ADivider
+              type="vertical"
+              v-if="userStore.userInfo.account === 'admin'"
+            />
             <a
               v-if="userStore.userInfo.account === 'admin'"
               style="color: #1677ff"
               @click="handleEdit(record)"
               >修改间隔</a
             >
-            <ADivider type="vertical" />
-            <a-popconfirm
+            <ADivider
+              type="vertical"
+              v-if="userStore.userInfo.account === 'admin'"
+            />
+            <APopconfirm
               title="是否确认删除?"
               ok-text="是"
               cancel-text="否"
@@ -46,7 +57,7 @@
                 style="color: #ff4848"
                 >删除</a
               >
-            </a-popconfirm>
+            </APopconfirm>
           </span>
         </template>
       </template>
@@ -107,7 +118,7 @@
               v-model:value="userInfo.userIds"
               style="width: 100%"
               mode="tags"
-              showSearch
+              show-search
               placeholder="选择用户"
               :options="usersOptions"
             />
@@ -137,11 +148,11 @@ import {
   Divider as ADivider,
   Form as AForm,
   FormItem as AFormItem,
-  message,
   Modal as AModal,
   Popconfirm as APopconfirm,
   Select as ASelect,
   Table as ATable,
+  message,
   Tag,
 } from 'ant-design-vue';
 import dayjs from 'dayjs';
@@ -239,7 +250,7 @@ function handleBind(record) {
 async function submitBind() {
   const array = userInfo.value.userIds;
   const res = await bindDeviceApi({
-    userIds: array.map((item) => item).join(),
+    userIds: array.map((item) => item).join(','),
     deviceId: userInfo.value.deviceId,
     deviceCode: userInfo.value.deviceCode,
   });
