@@ -14,18 +14,8 @@
         </template>
         <template v-else-if="column.key === 'action'">
           <span>
-            <a
-              v-if="userStore.userInfo.account === 'admin'"
-              style="color: #1677ff"
-              @click="handleEdit(record)"
-              >修改间隔</a
-            >
-            <ADivider
-              type="vertical"
-              v-if="
-                userStore.userInfo.account === 'admin' && record.status === 1
-              "
-            />
+            <a style="color: #1677ff" @click="handleEdit(record)">修改间隔</a>
+            <ADivider type="vertical" v-if="record.status === 1" />
             <a
               v-if="record.status === 1"
               style="color: #1677ff"

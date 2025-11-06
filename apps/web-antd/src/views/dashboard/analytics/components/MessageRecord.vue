@@ -59,12 +59,13 @@ const sendData = ref({
   pageNum: 1,
   pageSize: 10,
   total: 0,
-  onChange: (page: number) => {
-    pageChange(page);
+  onChange: (page: number, pageSize: number) => {
+    pageChange(page, pageSize);
   },
 });
-function pageChange(page: number) {
+function pageChange(page: number, pageSize: number) {
   sendData.value.pageNum = page;
+  sendData.value.pageSize = pageSize;
   getList(props.deviceCode);
 }
 function handleDetail(row) {
@@ -104,9 +105,7 @@ watch(
 );
 watch(
   () => props.typeValue,
-  (newVal) => {
-    console.log(newVal, 'newVal');
-
+  () => {
     getList(props.deviceCode);
   },
 );
