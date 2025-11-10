@@ -72,3 +72,10 @@ export async function resumeTaskApi(params) {
 export async function delTaskApi(params) {
   return requestClient.post(`/sms/delete/${params.batchId}`);
 }
+export async function getUnReadCountApi() {
+  return requestClient.get('/message/getUnReadCount');
+}
+
+export async function deleteMessageApi(data) {
+  return requestClient.post('/message/deleteMessage', data);
+}

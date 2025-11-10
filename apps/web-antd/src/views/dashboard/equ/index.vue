@@ -30,8 +30,7 @@
               v-if="userStore.userInfo.account === 'admin'"
               style="color: #1677ff"
               @click="handleBind(record)"
-              >分配用户</a
-            >
+              >分配用户</a>
             <ADivider
               type="vertical"
               v-if="userStore.userInfo.account === 'admin'"
@@ -143,13 +142,13 @@ import {
   Divider as ADivider,
   Form as AForm,
   FormItem as AFormItem,
-  message,
   Modal as AModal,
   Popconfirm as APopconfirm,
   Select as ASelect,
   Table as ATable,
-  Tag,
   Textarea as ATextarea,
+  message,
+  Tag,
 } from 'ant-design-vue';
 import dayjs from 'dayjs';
 
@@ -162,6 +161,11 @@ import {
 } from '#/api/core/sms';
 
 const columns = [
+  {
+    title: '操作',
+    key: 'action',
+    width: 180,
+  },
   {
     title: '设备编号',
     dataIndex: 'deviceCode',
@@ -188,11 +192,6 @@ const columns = [
     title: '创建时间',
     dataIndex: 'createTime',
     key: 'createTime',
-  },
-
-  {
-    title: '操作',
-    key: 'action',
   },
 ];
 const loading = ref(false);

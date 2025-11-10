@@ -1,27 +1,27 @@
 <template>
   <div class="analytics-box m-[20px]">
     <ATabs v-model:active-key="activeKey">
-      <a-tab-pane key="1">
-        <template #tab>
+      <a-tab-pane key="1" tab="消息分组">
+        <!-- <template #tab>
           <div style="position: relative">
             消息分组
             <a-badge class="workpalce-sub" :count="total.total1" />
           </div>
-        </template>
+        </template> -->
       </a-tab-pane>
-      <a-tab-pane key="2">
-        <template #tab>
+      <a-tab-pane key="2" tab="消息记录">
+        <!-- <template #tab>
           <div style="position: relative">
             消息记录
-            <a-badge class="workpalce-sub" :count="total.total2" />
+            <ABadge class="workpalce-sub" :count="total.total2" />
           </div>
-        </template>
+        </template> -->
       </a-tab-pane>
       <a-tab-pane key="3">
         <template #tab>
           <div style="position: relative">
             已回复消息
-            <a-badge class="workpalce-sub" :count="total.total3" />
+            <ABadge class="workpalce-sub" :count="total.total3" />
           </div>
         </template>
       </a-tab-pane>
@@ -30,7 +30,7 @@
       v-model:value="selectValue"
       placeholder="选择设备"
       mode="tags"
-      style="width: 200px"
+      style="width: 240px"
       :allow-clear="true"
       :options="options"
       @change="handleChange"
@@ -143,25 +143,24 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, reactive, ref } from 'vue';
+import { onActivated, onMounted, reactive, ref } from 'vue';
 
 import {
   Badge as ABadge,
   Button as AButton,
   Form as AForm,
   FormItem as AFormItem,
-  message,
   Modal as AModal,
   Select as ASelect,
   Tabs as ATabs,
   Textarea as ATextarea,
+  message,
 } from 'ant-design-vue';
 
 import {
   createMessageBatchApi,
   getDeviceListApi,
-  getMessageGroupListApi,
-  getMessageListApi,
+  getUnReadCountApi,
 } from '#/api/core/sms';
 // import ImportExcel from '#/components/ImportExcel/ImportExcel.vue';
 
@@ -194,7 +193,7 @@ const messageInfo = reactive({
 });
 const options = ref([]);
 function handleChange(data, option) {
-  console.log(option);
+  // console.log(option);
   if (Array.isArray(data) && data.length > 0) {
     messageInfo.deviceIds = option.map((item) => item.id).join(',');
     messageInfo.intervalMinutes = option[0].defaultInterval;
@@ -208,7 +207,9 @@ async function getDeviceList() {
   if (Array.isArray(res) && res.length > 0) {
     options.value = res.map((item) => ({
       value: item.deviceCode,
-      label: item.deviceCode,
+      label: item.remark
+        ? `${item.deviceCode} (${item.remark})`
+        : item.deviceCode,
       defaultInterval: item.defaultInterval,
       id: item.deviceId,
     }));
@@ -248,29 +249,16 @@ const handleOk = async () => {
 function loadDataSuccess(excelDataList) {
   console.log(excelDataList);
 }
-async function getTotalNum() {
-  const [res1, res2, res3] = await Promise.all([
-    getMessageGroupListApi({
-      pageSize: 1,
-      pageNum: 10,
-    }),
-    getMessageListApi({
-      pageSize: 1,
-      pageNum: 10,
-    }),
-    getMessageListApi({
-      pageSize: 1,
-      pageNum: 10,
-      type: 1,
-    }),
-  ]);
-  total.value.total1 = res1.total;
-  total.value.total2 = res2.total;
-  total.value.total3 = res3.total;
+async function getUnReadCount() {
+  const res = await getUnReadCountApi();
+  total.value.total3 = res || 0;
 }
 onMounted(() => {
   getDeviceList();
-  getTotalNum();
+  getUnReadCount();
+});
+onActivated(() => {
+  getUnReadCount();
 });
 </script>
 

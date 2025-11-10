@@ -11,20 +11,14 @@
         <ListItem>
           <ListItemMeta :description="item.description">
             <template #title>
-              <div class="flex">
-                <a class="mr-[10px]" @click="handleDetail(item)">{{
-                  item.title
-                }}</a>
-                <!-- <Tag v-if="item.type === 1" color="orange">收</Tag>
-                <Tag v-else color="green">发</Tag> -->
+              <div class="flex cursor-pointer" @click="handleDetail(item)">
+                <a class="mr-[10px] min-w-[200px]">{{ item.title }}</a>
+                <div style="color: rgb(50 54 57 / 45%)">
+                  {{ item.time }}
+                </div>
               </div>
             </template>
           </ListItemMeta>
-          <template #extra>
-            <div>
-              {{ item.time }}
-            </div>
-          </template>
         </ListItem>
       </template>
     </List>

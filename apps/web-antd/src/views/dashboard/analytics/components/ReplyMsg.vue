@@ -11,20 +11,19 @@
         <ListItem>
           <ListItemMeta :description="item.description">
             <template #title>
-              <div class="flex">
-                <a class="mr-[10px]" @click="handleDetail(item)">{{
-                  item.title
-                }}</a>
-                <Tag v-if="item.type === 1" color="orange">收</Tag>
-                <Tag v-else color="green">发</Tag>
+              <div class="flex cursor-pointer" @click="handleDetail(item)">
+                <div class="flex min-w-[250px]">
+                  <a class="mr-[10px]">{{ item.title }}</a>
+                  <Tag v-if="item.type === 1" color="orange">收</Tag>
+                  <Tag v-else color="green">发</Tag>
+                </div>
+
+                <div style="color: rgb(50 54 57 / 45%)">
+                  {{ item.time }}
+                </div>
               </div>
             </template>
           </ListItemMeta>
-          <template #extra>
-            <div>
-              {{ item.time }}
-            </div>
-          </template>
         </ListItem>
       </template>
     </List>
@@ -34,9 +33,9 @@
 import { ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
-import { List, ListItem, ListItemMeta, Tag } from 'ant-design-vue';
+import { List, ListItem, ListItemMeta, message, Tag } from 'ant-design-vue';
 
-import { getMessageListApi } from '#/api/core/sms';
+import { deleteMessageApi, getMessageListApi } from '#/api/core/sms';
 
 const props = defineProps({
   deviceCode: {
@@ -90,6 +89,17 @@ async function getList(deviceCode) {
           };
         })
       : [];
+}
+async function handleDel(record) {
+  const res = await deleteMessageApi({
+    deviceId: record,
+  });
+  if (res == 1) {
+    message.success('删除成功');
+    getList(props.deviceCode);
+  } else {
+    message.error(res);
+  }
 }
 
 watch(

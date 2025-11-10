@@ -20,15 +20,13 @@
               v-if="record.status === 1"
               style="color: #1677ff"
               @click="handlePause(record)"
-              >暂停</a
-            >
+              >暂停</a>
             <ADivider type="vertical" />
             <a
               v-if="record.status === 2"
               style="color: #1677ff"
               @click="handleResume(record)"
-              >继续</a
-            >
+              >继续</a>
             <ADivider type="vertical" v-if="record.status === 2" />
             <APopconfirm
               title="是否确认删除?"
@@ -40,8 +38,7 @@
             </APopconfirm>
             <ADivider type="vertical" v-if="record.status !== 4" />
             <a style="color: #1677ff" @click="handleDetail(record)">
-              查看详情</a
-            >
+              查看详情</a>
           </span>
         </template>
       </template>
@@ -136,6 +133,11 @@ import {
 
 const columns = [
   {
+    title: '操作',
+    key: 'action',
+    width: 300,
+  },
+  {
     title: '任务名称',
     dataIndex: 'batchName',
     width: 160,
@@ -143,8 +145,8 @@ const columns = [
   {
     title: '内容',
     dataIndex: 'content',
-    // width: 300,
-    ellipsis: true,
+    // width: 250,
+    // ellipsis: true,
   },
   {
     title: '时间间隔',
@@ -162,21 +164,16 @@ const columns = [
     width: 120,
   },
   {
-    title: '创建时间',
-    dataIndex: 'createTime',
-    key: 'createTime',
-    width: 200,
-  },
-  {
     title: '状态',
     dataIndex: 'status',
     key: 'status',
     width: 120,
   },
   {
-    title: '操作',
-    key: 'action',
-    width: 300,
+    title: '创建时间',
+    dataIndex: 'createTime',
+    key: 'createTime',
+    width: 180,
   },
 ];
 const detailColumns = [

@@ -1,42 +1,64 @@
 <template>
   <div class="mt-[20px]">
-    <List
+    <AButton
+      class="mb-[10px]"
+      v-if="selectedRowKeys.length > 0"
+      @click="handleDel"
+      type="primary"
+      danger
+    >
+      批量删除
+    </AButton>
+    <ATable
+      :row-selection="{
+        selectedRowKeys,
+        onChange: onSelectChange,
+      }"
+      :row-key="(record) => record.id"
       :pagination="sendData"
       @change="sendData.onChange"
-      item-layout="horizontal"
+      :columns="columns"
       :data-source="data"
-      bordered
     >
-      <template #renderItem="{ item }">
-        <ListItem>
-          <ListItemMeta :description="item.description">
-            <template #title>
-              <div class="flex">
-                <a class="mr-[10px]" @click="handleDetail(item)">{{
-                  item.title
-                }}</a>
-                <Tag v-if="item.type === 1" color="orange">收</Tag>
-                <Tag v-else color="green">发</Tag>
-              </div>
-            </template>
-          </ListItemMeta>
-          <template #extra>
-            <div>
-              {{ item.time }}
-            </div>
-          </template>
-        </ListItem>
+      <template #bodyCell="{ column, record }">
+        <template v-if="column.key === 'lastType'">
+          <Tag v-if="record.lastType === 1" color="orange">收</Tag>
+          <Tag v-else color="green">发</Tag>
+        </template>
+        <template v-if="column.key === 'phone'">
+          <a style="color: #1677ff" @click="handleDetail(record)">{{
+            record.phone
+          }}</a>
+        </template>
+        <template v-else-if="column.key === 'action'">
+          <span>
+            <APopconfirm
+              title="是否确认删除?"
+              ok-text="是"
+              cancel-text="否"
+              @confirm="handleDel(record)"
+            >
+              <a style="color: #ff4848">删除</a>
+            </APopconfirm>
+          </span>
+        </template>
       </template>
-    </List>
+    </ATable>
   </div>
 </template>
 <script lang="ts" setup>
 import { ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
-import { List, ListItem, ListItemMeta, Tag } from 'ant-design-vue';
+import {
+  Button as AButton,
+  Popconfirm as APopconfirm,
+  Table as ATable,
+  message,
+  Tag,
+} from 'ant-design-vue';
 
-import { getMessageListApi } from '#/api/core/sms';
+import { deleteMessageApi, getMessageListApi } from '#/api/core/sms';
 
 const props = defineProps({
   deviceCode: {
@@ -48,6 +70,42 @@ const props = defineProps({
     default: undefined,
   },
 });
+const selectedRowKeys = ref([]);
+const selectedRows = ref([]);
+const onSelectChange = (keys, rows) => {
+  // console.log('selectedRowKeys changed:', rows);
+  selectedRows.value = rows;
+  selectedRowKeys.value = keys;
+};
+const columns = [
+  {
+    title: '操作',
+    key: 'action',
+    width: 80,
+  },
+  {
+    title: '手机号码',
+    dataIndex: 'phone',
+    key: 'phone',
+    width: 200,
+  },
+  {
+    title: '短信内容',
+    dataIndex: 'lastMessage',
+    width: 300,
+  },
+  {
+    title: '时间',
+    dataIndex: 'lastTime',
+    width: 200,
+  },
+  {
+    title: '收发状态',
+    dataIndex: 'lastType',
+    key: 'lastType',
+    width: 200,
+  },
+];
 const { push } = useRouter();
 interface DataItem {
   title: string;
@@ -59,8 +117,10 @@ const sendData = ref({
   pageNum: 1,
   pageSize: 10,
   total: 0,
-  onChange: (page: number, pageSize: number) => {
-    pageChange(page, pageSize);
+  onChange: (pagination) => {
+    if (typeof pagination === 'object') {
+      pageChange(pagination.current, pagination.pageSize);
+    }
   },
 });
 function pageChange(page: number, pageSize: number) {
@@ -70,7 +130,7 @@ function pageChange(page: number, pageSize: number) {
 }
 function handleDetail(row) {
   push(
-    `/messageDetail?phone=${encodeURIComponent(row.title)}&deviceCode=${row.deviceCode}`,
+    `/messageDetail?phone=${encodeURIComponent(row.phone)}&deviceCode=${row.deviceCode}`,
   );
 }
 async function getList(deviceCode) {
@@ -84,16 +144,24 @@ async function getList(deviceCode) {
   sendData.value.total = res.total;
   data.value =
     Array.isArray(res.list) && res.list.length > 0
-      ? res.list.map((i) => {
+      ? res.list.map((item) => {
           return {
-            title: i.phone,
-            description: i.lastMessage,
-            time: i.lastTime,
-            type: i.lastType,
-            deviceCode: i.deviceCode,
+            ...item,
           };
         })
       : [];
+}
+async function handleDel(record) {
+  const array = selectedRows.value.length > 0 ? selectedRows.value : [record];
+  const res = await deleteMessageApi(array);
+  if (res == 1) {
+    message.success('删除成功');
+    selectedRowKeys.value = [];
+    selectedRows.value = [];
+    getList(props.deviceCode);
+  } else {
+    message.error(res);
+  }
 }
 
 watch(
