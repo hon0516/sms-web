@@ -25,13 +25,15 @@
               v-if="record.status === 1"
               style="color: #1677ff"
               @click="handlePause(record)"
-              >暂停</a>
+              >暂停</a
+            >
             <ADivider type="vertical" />
             <a
               v-if="record.status === 2"
               style="color: #1677ff"
               @click="handleResume(record)"
-              >继续</a>
+              >继续</a
+            >
             <ADivider type="vertical" v-if="record.status === 2" />
             <APopconfirm
               title="是否确认删除?"
@@ -43,7 +45,8 @@
             </APopconfirm>
             <ADivider type="vertical" v-if="record.status !== 4" />
             <a style="color: #1677ff" @click="handleDetail(record)">
-              查看详情</a>
+              查看详情</a
+            >
           </span>
         </template>
       </template>
@@ -223,6 +226,11 @@ const detailColumns = [
     ellipsis: true,
   },
   {
+    title: '任务执行时间',
+    dataIndex: 'executionTime',
+    width: 180,
+  },
+  {
     title: '实际发送时间',
     dataIndex: 'sendTime',
     width: 180,
@@ -237,11 +245,6 @@ const detailColumns = [
     dataIndex: 'statusDesc',
     width: 220,
     ellipsis: true,
-  },
-  {
-    title: '创建时间',
-    dataIndex: 'createTime',
-    width: 180,
   },
 ];
 
