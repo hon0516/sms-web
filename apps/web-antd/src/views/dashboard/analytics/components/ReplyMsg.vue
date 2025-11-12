@@ -23,8 +23,9 @@
 </template>
 <script lang="ts" setup>
 import { onActivated, ref, watch } from 'vue';
-import { useRouter } from 'vue-router';
+import { onBeforeRouteLeave, useRouter } from 'vue-router';
 
+import { useIntervalFn } from '@vueuse/core';
 import { Table as ATable, Tag } from 'ant-design-vue';
 
 import { getMessageListApi } from '#/api/core/sms';
@@ -108,9 +109,16 @@ async function getList(deviceCode) {
         })
       : [];
 }
+// 定时器
+const { pause, resume } = useIntervalFn(() => {
+  getList(props.deviceCode);
+}, 60 * 1000);
 onActivated(() => {
+  resume();
   getList(props.deviceCode);
 });
+onBeforeRouteLeave(() => pause());
+
 watch(
   () => props.deviceCode,
   (newVal) => {

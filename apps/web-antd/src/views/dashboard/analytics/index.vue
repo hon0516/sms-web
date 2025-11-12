@@ -154,7 +154,9 @@
 
 <script lang="ts" setup>
 import { onActivated, onMounted, reactive, ref } from 'vue';
+import { onBeforeRouteLeave } from 'vue-router';
 
+import { useIntervalFn } from '@vueuse/core';
 import {
   Badge as ABadge,
   Button as AButton,
@@ -264,13 +266,19 @@ async function getUnReadCount() {
   const res = await getUnReadCountApi();
   total.value.total3 = res || 0;
 }
+// 定时器
+const { pause, resume } = useIntervalFn(() => {
+  getUnReadCount();
+}, 60 * 1000);
 onMounted(() => {
   getDeviceList();
   getUnReadCount();
 });
 onActivated(() => {
+  resume();
   getUnReadCount();
 });
+onBeforeRouteLeave(() => pause());
 </script>
 
 <style lang="less" scoped>
