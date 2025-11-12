@@ -1,6 +1,6 @@
 <template>
   <div class="mt-[20px]">
-    <List
+    <!-- <List
       :pagination="sendData"
       @change="sendData.onChange"
       item-layout="horizontal"
@@ -21,14 +21,33 @@
           </ListItemMeta>
         </ListItem>
       </template>
-    </List>
+    </List> -->
+    <ATable
+      :row-key="(record) => record.id"
+      :pagination="sendData"
+      @change="sendData.onChange"
+      :columns="columns"
+      :data-source="data"
+    >
+      <template #bodyCell="{ column, record }">
+        <template v-if="column.key === 'status'">
+          <Tag v-if="record.status === 1" color="green">已读</Tag>
+          <Tag v-else color="red">未读</Tag>
+        </template>
+        <template v-if="column.key === 'phone'">
+          <a style="color: #1677ff" @click="handleDetail(record)">{{
+            record.phone
+          }}</a>
+        </template>
+      </template>
+    </ATable>
   </div>
 </template>
 <script lang="ts" setup>
 import { ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
-import { List, ListItem, ListItemMeta } from 'ant-design-vue';
+import { Table as ATable, Tag } from 'ant-design-vue';
 
 import { getMessageGroupListApi } from '#/api/core/sms';
 
@@ -49,10 +68,30 @@ const sendData = ref({
   pageNum: 1,
   pageSize: 10,
   total: 0,
-  onChange: (page: number, pageSize: number) => {
-    pageChange(page, pageSize);
+  onChange: (pagination) => {
+    if (typeof pagination === 'object') {
+      pageChange(pagination.current, pagination.pageSize);
+    }
   },
 });
+const columns = [
+  {
+    title: '手机号码',
+    dataIndex: 'phone',
+    key: 'phone',
+    width: 200,
+  },
+  {
+    title: '短信内容',
+    dataIndex: 'lastMessage',
+    width: 300,
+  },
+  {
+    title: '时间',
+    dataIndex: 'lastTime',
+    width: 200,
+  },
+];
 function pageChange(page: number, pageSize: number) {
   sendData.value.pageNum = page;
   sendData.value.pageSize = pageSize;
@@ -60,7 +99,7 @@ function pageChange(page: number, pageSize: number) {
 }
 function handleDetail(row) {
   push(
-    `/messageDetail?phone=${encodeURIComponent(row.title)}&deviceCode=${row.deviceCode}`,
+    `/messageDetail?phone=${encodeURIComponent(row.phone)}&deviceCode=${row.deviceCode}`,
   );
 }
 async function getList(deviceCode) {
@@ -73,13 +112,9 @@ async function getList(deviceCode) {
   sendData.value.total = res.total;
   data.value =
     Array.isArray(res.list) && res.list.length > 0
-      ? res.list.map((i) => {
+      ? res.list.map((item) => {
           return {
-            title: i.phone,
-            description: i.lastMessage,
-            time: i.lastTime,
-            type: i.lastType,
-            deviceCode: i.deviceCode,
+            ...item,
           };
         })
       : [];

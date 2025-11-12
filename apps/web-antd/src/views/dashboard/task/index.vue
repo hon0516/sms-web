@@ -1,6 +1,11 @@
 <template>
   <div class="m-[20px]">
-    <ATable :pagination="false" :columns="columns" :data-source="tableData">
+    <ATable
+      :pagination="sendData"
+      @change="sendData.onChange"
+      :columns="columns"
+      :data-source="tableData"
+    >
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'createTime'">
           <span>
@@ -87,33 +92,46 @@
       :footer="null"
       title="任务详情"
     >
-      <ATable
-        :pagination="false"
-        :columns="detailColumns"
-        :data-source="detailTableData"
-        :scroll="{ y: 500 }"
-      >
-        <template #bodyCell="{ column, record }">
-          <template v-if="column.key === 'simSlot'">
-            <span>
-              {{ record.simSlot === 0 ? '卡槽1' : '卡槽2' }}
-            </span>
+      <div>
+        <div class="flex items-center">
+          <AInput
+            style="width: 200px; margin: 10px 0"
+            v-model:value="detailPagination.deviceCode"
+            placeholder="输入设备编号查询"
+          />
+          <AButton @click="getDetail" type="primary" class="mx-[10px]">
+            查询
+          </AButton>
+          <AButton @click="handleReload" type="primary">重置</AButton>
+        </div>
+
+        <ATable
+          :pagination="detailPagination"
+          :columns="detailColumns"
+          :data-source="detailTableData"
+          :scroll="{ y: 500 }"
+        >
+          <template #bodyCell="{ column, record }">
+            <template v-if="column.key === 'simSlot'">
+              <span>
+                {{ record.simSlot === 0 ? '卡槽1' : '卡槽2' }}
+              </span>
+            </template>
           </template>
-        </template>
-      </ATable>
+        </ATable>
+      </div>
     </AModal>
   </div>
 </template>
 <script lang="ts" setup>
 import { onMounted, ref } from 'vue';
 
-import { useUserStore } from '@vben/stores';
-
 import {
   Button as AButton,
   Divider as ADivider,
   Form as AForm,
   FormItem as AFormItem,
+  Input as AInput,
   Modal as AModal,
   Popconfirm as APopconfirm,
   Select as ASelect,
@@ -194,13 +212,18 @@ const detailColumns = [
     width: 120,
   },
   {
+    title: '执行顺序',
+    dataIndex: 'seqNo',
+    width: 100,
+  },
+  {
     title: '短信内容',
     dataIndex: 'content',
     width: 220,
     ellipsis: true,
   },
   {
-    title: '计划发送时间',
+    title: '实际发送时间',
     dataIndex: 'sendTime',
     width: 180,
   },
@@ -221,7 +244,7 @@ const detailColumns = [
     width: 180,
   },
 ];
-const userStore = useUserStore();
+
 const loading = ref(false);
 const tableData = ref([]);
 const detailTableData = ref([]);
@@ -231,6 +254,7 @@ const messageInfo = ref({
   id: '',
   newIntervalMinutes: undefined,
 });
+const detailId = ref('');
 function getStatusText(status) {
   return statusMap.value[status];
 }
@@ -241,8 +265,13 @@ const statusMap = ref({
   4: '已删除',
 });
 async function getTaskList() {
-  const res = await getTaskListApi();
-  tableData.value = Array.isArray(res) && res.length > 0 ? res : [];
+  const res = await getTaskListApi({
+    pageNum: sendData.value.pageNum,
+    pageSize: sendData.value.pageSize,
+  });
+  sendData.value.total = res.total;
+  tableData.value =
+    Array.isArray(res.list) && res.list.length > 0 ? res.list : [];
 }
 function handleEdit(record) {
   // messageInfo.value = JSON.parse(JSON.stringify(record));
@@ -252,10 +281,60 @@ function handleEdit(record) {
 }
 async function handleDetail(record) {
   visible1.value = true;
+  detailId.value = record.id;
+  getDetail();
+}
+const sendData = ref({
+  pageNum: 1,
+  pageSize: 10,
+  total: 0,
+  onChange: (pagination) => {
+    if (typeof pagination === 'object') {
+      pageChange(pagination.current, pagination.pageSize);
+    } else {
+      pageChange(pagination, 10);
+    }
+  },
+});
+function pageChange(page: number, pageSize: number) {
+  sendData.value.pageNum = page;
+  sendData.value.pageSize = pageSize;
+  getTaskList();
+}
+const detailPagination = ref({
+  pageNum: 1,
+  pageSize: 10,
+  total: 0,
+  deviceCode: '',
+  onChange: (pagination) => {
+    console.log(pagination, 'pagination');
+
+    if (typeof pagination === 'object') {
+      detailPageChange(pagination.current, pagination.pageSize);
+    } else {
+      detailPageChange(pagination, 10);
+    }
+  },
+});
+function detailPageChange(page: number, pageSize: number) {
+  detailPagination.value.pageNum = page;
+  detailPagination.value.pageSize = pageSize;
+  getDetail();
+}
+async function getDetail() {
   const res = await getTaskDeatilApi({
-    taskId: record.id,
+    taskId: detailId.value,
+    deviceCode: detailPagination.value.deviceCode,
+    pageNum: detailPagination.value.pageNum,
+    pageSize: detailPagination.value.pageSize,
   });
-  detailTableData.value = Array.isArray(res) && res.length > 0 ? res : [];
+  detailPagination.value.total = res.total;
+  detailTableData.value =
+    Array.isArray(res.list) && res.list.length > 0 ? res.list : [];
+}
+function handleReload() {
+  detailPagination.value.deviceCode = '';
+  getDetail();
 }
 async function handleOk() {
   loading.value = true;

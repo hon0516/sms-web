@@ -40,8 +40,8 @@ export async function bindDeviceApi(data) {
 export async function updateDeviceApi(data) {
   return requestClient.post('/device/update', data);
 }
-export async function getTaskListApi() {
-  return requestClient.get('/sms/getTaskList');
+export async function getTaskListApi(params) {
+  return requestClient.get('/sms/getTaskList', params);
 }
 export async function updateIntervalApi(params) {
   return requestClient.post(

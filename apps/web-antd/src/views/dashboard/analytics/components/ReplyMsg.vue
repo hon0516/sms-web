@@ -1,48 +1,68 @@
 <template>
   <div class="mt-[20px]">
-    <List
+    <ATable
+      :row-key="(record) => record.id"
       :pagination="sendData"
       @change="sendData.onChange"
-      item-layout="horizontal"
+      :columns="columns"
       :data-source="data"
-      bordered
     >
-      <template #renderItem="{ item }">
-        <ListItem>
-          <ListItemMeta :description="item.description">
-            <template #title>
-              <div class="flex cursor-pointer" @click="handleDetail(item)">
-                <div class="flex min-w-[250px]">
-                  <a class="mr-[10px]">{{ item.title }}</a>
-                  <Tag v-if="item.type === 1" color="orange">收</Tag>
-                  <Tag v-else color="green">发</Tag>
-                </div>
-
-                <div style="color: rgb(50 54 57 / 45%)">
-                  {{ item.time }}
-                </div>
-              </div>
-            </template>
-          </ListItemMeta>
-        </ListItem>
+      <template #bodyCell="{ column, record }">
+        <template v-if="column.key === 'status'">
+          <Tag v-if="record.status === 1" color="green">已读</Tag>
+          <Tag v-else color="red">未读</Tag>
+        </template>
+        <template v-if="column.key === 'phone'">
+          <a style="color: #1677ff" @click="handleDetail(record)">{{
+            record.phone
+          }}</a>
+        </template>
       </template>
-    </List>
+    </ATable>
   </div>
 </template>
 <script lang="ts" setup>
-import { ref, watch } from 'vue';
+import { onActivated, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
-import { List, ListItem, ListItemMeta, message, Tag } from 'ant-design-vue';
+import { Table as ATable, Tag } from 'ant-design-vue';
 
-import { deleteMessageApi, getMessageListApi } from '#/api/core/sms';
+import { getMessageListApi } from '#/api/core/sms';
 
 const props = defineProps({
   deviceCode: {
     type: Array,
     default: [],
   },
+  typeValue: {
+    type: Number,
+    default: undefined,
+  },
 });
+const columns = [
+  {
+    title: '手机号码',
+    dataIndex: 'phone',
+    key: 'phone',
+    width: 200,
+  },
+  {
+    title: '短信内容',
+    dataIndex: 'lastMessage',
+    width: 300,
+  },
+  {
+    title: '时间',
+    dataIndex: 'lastTime',
+    width: 200,
+  },
+  {
+    title: '状态',
+    dataIndex: 'status',
+    key: 'status',
+    width: 120,
+  },
+];
 const { push } = useRouter();
 interface DataItem {
   title: string;
@@ -54,8 +74,10 @@ const sendData = ref({
   pageNum: 1,
   pageSize: 10,
   total: 0,
-  onChange: (page: number, pageSize: number) => {
-    pageChange(page, pageSize);
+  onChange: (pagination) => {
+    if (typeof pagination === 'object') {
+      pageChange(pagination.current, pagination.pageSize);
+    }
   },
 });
 function pageChange(page: number, pageSize: number) {
@@ -65,48 +87,41 @@ function pageChange(page: number, pageSize: number) {
 }
 function handleDetail(row) {
   push(
-    `/messageDetail?phone=${encodeURIComponent(row.title)}&deviceCode=${row.deviceCode}`,
+    `/messageDetail?phone=${encodeURIComponent(row.phone)}&deviceCode=${row.deviceCode}`,
   );
 }
 async function getList(deviceCode) {
   const res = await getMessageListApi({
     deviceCode:
       deviceCode.length > 0 && deviceCode[0] ? deviceCode.join(',') : undefined,
+    type: 1,
     pageNum: sendData.value.pageNum,
     pageSize: sendData.value.pageSize,
-    type: 1,
   });
   sendData.value.total = res.total;
   data.value =
     Array.isArray(res.list) && res.list.length > 0
-      ? res.list.map((i) => {
+      ? res.list.map((item) => {
           return {
-            title: i.phone,
-            description: i.lastMessage,
-            time: i.lastTime,
-            type: i.lastType,
-            deviceCode: i.deviceCode,
+            ...item,
           };
         })
       : [];
 }
-async function handleDel(record) {
-  const res = await deleteMessageApi({
-    deviceId: record,
-  });
-  if (res == 1) {
-    message.success('删除成功');
-    getList(props.deviceCode);
-  } else {
-    message.error(res);
-  }
-}
-
+onActivated(() => {
+  getList(props.deviceCode);
+});
 watch(
   () => props.deviceCode,
   (newVal) => {
     getList(newVal);
   },
-  { immediate: true, deep: true },
+  { immediate: true },
+);
+watch(
+  () => props.typeValue,
+  () => {
+    getList(props.deviceCode);
+  },
 );
 </script>

@@ -79,6 +79,16 @@
           autocomplete="off"
         >
           <AFormItem
+            label="任务名称"
+            name="batchName"
+            :rules="[{ required: true, message: '输入任务名称!' }]"
+          >
+            <AInput
+              placeholder="输入任务名称"
+              v-model:value="messageInfo.batchName"
+            />
+          </AFormItem>
+          <AFormItem
             label="设备编号"
             name="codes"
             :rules="[{ required: true, message: '请选择设备!' }]"
@@ -150,6 +160,7 @@ import {
   Button as AButton,
   Form as AForm,
   FormItem as AFormItem,
+  Input as AInput,
   Modal as AModal,
   Select as ASelect,
   Tabs as ATabs,
