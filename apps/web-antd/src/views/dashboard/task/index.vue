@@ -97,11 +97,19 @@
     >
       <div>
         <div class="flex items-center">
-          <AInput
+          <ASelect
+            v-model:value="detailPagination.deviceCode"
+            placeholder="选择设备"
+            style="width: 240px"
+            :allow-clear="true"
+            :options="deviceOptions"
+            @change="getDetail"
+          />
+          <!-- <AInput
             style="width: 200px; margin: 10px 0"
             v-model:value="detailPagination.deviceCode"
             placeholder="输入设备编号查询"
-          />
+          /> -->
           <AButton @click="getDetail" type="primary" class="mx-[10px]">
             查询
           </AButton>
@@ -134,7 +142,6 @@ import {
   Divider as ADivider,
   Form as AForm,
   FormItem as AFormItem,
-  Input as AInput,
   Modal as AModal,
   Popconfirm as APopconfirm,
   Select as ASelect,
@@ -145,6 +152,7 @@ import dayjs from 'dayjs';
 
 import {
   delTaskApi,
+  getDeviceCodeByIdApi,
   getTaskDeatilApi,
   getTaskListApi,
   pauseTaskApi,
@@ -258,6 +266,7 @@ const messageInfo = ref({
   newIntervalMinutes: undefined,
 });
 const detailId = ref('');
+const deviceOptions = ref([]);
 function getStatusText(status) {
   return statusMap.value[status];
 }
@@ -285,6 +294,7 @@ function handleEdit(record) {
 async function handleDetail(record) {
   visible1.value = true;
   detailId.value = record.id;
+  getDeviceCodeById();
   getDetail();
 }
 const sendData = ref({
@@ -308,10 +318,8 @@ const detailPagination = ref({
   pageNum: 1,
   pageSize: 10,
   total: 0,
-  deviceCode: '',
+  deviceCode: undefined,
   onChange: (pagination) => {
-    console.log(pagination, 'pagination');
-
     if (typeof pagination === 'object') {
       detailPageChange(pagination.current, pagination.pageSize);
     } else {
@@ -336,7 +344,7 @@ async function getDetail() {
     Array.isArray(res.list) && res.list.length > 0 ? res.list : [];
 }
 function handleReload() {
-  detailPagination.value.deviceCode = '';
+  detailPagination.value.deviceCode = undefined;
   getDetail();
 }
 async function handleOk() {
@@ -376,6 +384,17 @@ async function handleDel(record) {
   });
   message.success(res);
   getTaskList();
+}
+async function getDeviceCodeById() {
+  const res = await getDeviceCodeByIdApi({
+    taskId: detailId.value,
+  });
+  deviceOptions.value = res.map((i) => {
+    return {
+      label: i,
+      value: i,
+    };
+  });
 }
 onMounted(() => {
   getTaskList();

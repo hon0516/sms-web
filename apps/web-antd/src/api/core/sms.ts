@@ -79,3 +79,9 @@ export async function getUnReadCountApi() {
 export async function deleteMessageApi(data) {
   return requestClient.post('/message/deleteMessage', data);
 }
+export async function getDeviceCodeByIdApi(params) {
+  return requestClient.get('/message/getDeviceCodeById', params);
+}
+export async function addReplyRemarkApi(data) {
+  return requestClient.post('/message/addReplyRemark', data);
+}

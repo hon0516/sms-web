@@ -17,8 +17,41 @@
             record.phone
           }}</a>
         </template>
+        <template v-else-if="column.key === 'action'">
+          <a style="color: #1677ff" @click="handleEdit(record)">备注</a>
+        </template>
       </template>
     </ATable>
+    <AModal v-model:open="visible" :footer="null" title="备注">
+      <div>
+        <AForm
+          :model="messageInfo"
+          name="basic"
+          :label-col="{ span: 4 }"
+          :wrapper-col="{ span: 20 }"
+          @finish="submitBind"
+          autocomplete="off"
+        >
+          <AFormItem label="备注" name="remark">
+            <ATextarea
+              :rows="2"
+              placeholder="输入备注"
+              v-model:value="messageInfo.remark"
+            />
+          </AFormItem>
+          <AFormItem :wrapper-col="{ span: 14, offset: 4 }">
+            <AButton
+              style="margin-right: 10px"
+              type="primary"
+              html-type="submit"
+            >
+              确认
+            </AButton>
+            <AButton @click="visible = false"> 取消 </AButton>
+          </AFormItem>
+        </AForm>
+      </div>
+    </AModal>
   </div>
 </template>
 <script lang="ts" setup>
@@ -26,9 +59,18 @@ import { onActivated, ref, watch } from 'vue';
 import { onBeforeRouteLeave, useRouter } from 'vue-router';
 
 import { useIntervalFn } from '@vueuse/core';
-import { Table as ATable, Tag } from 'ant-design-vue';
+import {
+  Button as AButton,
+  Form as AForm,
+  FormItem as AFormItem,
+  Modal as AModal,
+  Table as ATable,
+  Textarea as ATextarea,
+  message,
+  Tag,
+} from 'ant-design-vue';
 
-import { getMessageListApi } from '#/api/core/sms';
+import { addReplyRemarkApi, getMessageListApi } from '#/api/core/sms';
 
 const props = defineProps({
   deviceCode: {
@@ -40,17 +82,32 @@ const props = defineProps({
     default: undefined,
   },
 });
+const visible = ref(false);
+const messageInfo = ref({
+  id: '',
+  remark: '',
+});
 const columns = [
+  {
+    title: '操作',
+    key: 'action',
+    width: 60,
+  },
   {
     title: '手机号码',
     dataIndex: 'phone',
     key: 'phone',
-    width: 200,
+    width: 140,
   },
   {
     title: '短信内容',
     dataIndex: 'lastMessage',
     width: 300,
+  },
+  {
+    title: '跟进备注',
+    dataIndex: 'remark',
+    width: 140,
   },
   {
     title: '时间',
@@ -108,6 +165,23 @@ async function getList(deviceCode) {
           };
         })
       : [];
+}
+function handleEdit(row) {
+  messageInfo.value = {
+    id: row.id,
+    remark: row.remark,
+  };
+  visible.value = true;
+}
+async function submitBind() {
+  const res = await addReplyRemarkApi(messageInfo.value);
+  if (res === 1) {
+    message.success('操作成功');
+    getList(props.deviceCode);
+    visible.value = false;
+  } else {
+    message.error(res);
+  }
 }
 // 定时器
 const { pause, resume } = useIntervalFn(() => {

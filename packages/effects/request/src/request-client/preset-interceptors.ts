@@ -60,7 +60,6 @@ export const authenticateResponseInterceptor = ({
   return {
     rejected: async (error) => {
       const { config, response } = error;
-
       // 如果不是 401 错误，直接抛出异常
       if (
         response?.data.code === 500 &&
@@ -70,6 +69,9 @@ export const authenticateResponseInterceptor = ({
         client.refreshTokenQueue.forEach((callback) => callback(''));
         client.refreshTokenQueue = [];
         await doReAuthenticate();
+      }
+      if (response?.status === 403) {
+        doReAuthenticate();
       }
       if (response?.status !== 401) {
         throw error;
@@ -141,7 +143,8 @@ export const errorMessageResponseInterceptor = (
       }
 
       let errorMessage = '';
-      const status = error?.data?.code;
+
+      const status = error?.data?.code || error?.response?.status;
 
       switch (status) {
         case 400: {
@@ -153,7 +156,8 @@ export const errorMessageResponseInterceptor = (
           break;
         }
         case 403: {
-          errorMessage = $t('ui.fallback.http.forbidden');
+          // errorMessage = $t('ui.fallback.http.forbidden');
+          errorMessage = $t('ui.fallback.http.unauthorized');
           break;
         }
         case 404: {
